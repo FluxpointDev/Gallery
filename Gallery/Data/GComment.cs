@@ -13,6 +13,5 @@ namespace Gallery.Data
         public bool hidden = false;
         public bool anonymous = false;
         public DateTime date = DateTime.UtcNow;
-
     }
 }

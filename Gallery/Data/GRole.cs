@@ -5,13 +5,13 @@ using System.Threading.Tasks;
 
 namespace Gallery.Data
 {
-    public class GTag
+    public class GRole
     {
         public int id;
-        public string link;
         public string name;
-        public bool isNsfw = false;
-        public bool isCharacter = false;
         public string description = "";
+        public bool isAdmin = false;
+        public bool isMod = false;
+        public bool isApprover = false;
     }
 }
