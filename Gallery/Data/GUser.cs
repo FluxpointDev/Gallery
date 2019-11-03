@@ -5,11 +5,10 @@ using System.Threading.Tasks;
 
 namespace Gallery.Data
 {
-    public class GTag
+    public class GUser
     {
-        public int id;
-        public string link;
+        public string id;
         public string name;
-        public bool isNsfw = false;
+        public List<int> roles = new List<int>();
     }
 }
