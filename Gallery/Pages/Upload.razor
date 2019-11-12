@@ -1,0 +1,137 @@
+﻿@page "/upload"
+@attribute [Authorize(Roles = "owner")]
+@using System.IO;
+@using Blazor.FileReader
+@using SkiaSharp
+@using ImageMagick
+@inject IFileReaderService fileReaderService;
+
+<style>
+    .@dropTargetClass {
+        display:block;
+        padding: 20px;
+        margin-bottom: 10px;
+        border: 1px dashed black;
+        border-radius: 5px;
+    }
+    .@dropTargetDragClass {
+        border-color: orangered;
+        font-weight: bold;
+    }
+</style>
+
+<div class="@DropClass"
+     @ref=dropTargetElement
+     @ondrop=OnDrop
+     @ondragenter=OnDragEnter
+     @ondragleave=OnDragLeave>
+    Drop Files here.
+    @foreach (var fileInfo in FileList)
+    {
+        <br />@fileInfo.Name
+    }
+</div>
+<br />
+<button @onclick="ReadFile" class="btn btn-primary">Read file</button>
+
+
+@code {
+    ElementReference dropTargetElement;
+    IFileReaderRef dropReference;
+
+    const string dropTargetDragClass = "droptarget-drag";
+    const string dropTargetClass = "droptarget";
+
+    private List<string> _dropClasses = new List<string>() { dropTargetClass };
+
+    string DropClass => string.Join(" ", _dropClasses);
+
+
+    List<IFileInfo> FileList { get; } = new List<IFileInfo>();
+
+    protected override async Task OnAfterRenderAsync(bool isFirstRender)
+    {
+        if (isFirstRender)
+        {
+            dropReference = fileReaderService.CreateReference(dropTargetElement);
+            await dropReference.RegisterDropEventsAsync();
+        }
+    }
+
+    public async Task OnAdditiveChange(ChangeEventArgs e)
+    {
+        await dropReference.UnregisterDropEventsAsync();
+        await dropReference.RegisterDropEventsAsync(true);
+    }
+
+    public async Task ClearFile()
+    {
+        await dropReference.ClearValue();
+        await this.RefreshFileList();
+    }
+
+    public void OnDragEnter(EventArgs e)
+    {
+        _dropClasses.Add(dropTargetDragClass);
+    }
+
+    public void OnDragLeave(EventArgs e)
+    {
+        _dropClasses.Remove(dropTargetDragClass);
+    }
+
+    public async Task OnDrop(EventArgs e)
+    {
+        _dropClasses.Remove(dropTargetDragClass);
+        this.StateHasChanged();
+        await this.RefreshFileList();
+    }
+
+    private async Task RefreshFileList()
+    {
+        this.FileList.Clear();
+        foreach (var file in await dropReference.EnumerateFilesAsync())
+        {
+            var fileInfo = await file.ReadFileInfoAsync();
+            this.FileList.Add(fileInfo);
+        }
+        this.StateHasChanged();
+    }
+
+    public async Task ReadFile()
+    {
+        this.StateHasChanged();
+        var nl = Environment.NewLine;
+        DateTime DT = DateTime.UtcNow;
+
+
+        foreach (var file in await dropReference.EnumerateFilesAsync())
+        {
+            var fileInfo = await file.ReadFileInfoAsync();
+            string Name = "." + fileInfo.Name.Split('.').Last();
+            string ID = Program.Gen.CreateId().ToString();
+            MagickFormat Format = MagickFormat.Jpg;
+            if (Name == ".png")
+                Format = MagickFormat.Png;
+            using (var fs = await file.OpenReadAsync())
+            {
+                SKBitmap bm = SKBitmap.Decode(fs);
+                bm.ScalePixels(new SKBitmap(792, 594), SKFilterQuality.Medium);
+                //MemoryStream Stream = await file.CreateMemoryStreamAsync();
+                //using (MagickImage image = new MagickImage(Stream, new MagickReadSettings { ColorType = ColorType.Optimize, Format = Format }))
+                //{
+                //    image.Strip();
+                //    image.Write("C:/Global/Website/Gallery/img/" + ID + Name);
+                //    image.Resize(792, 594);
+                //    image.Write("C:/Global/Website/Gallery/med/" + ID + Name);
+                //    image.Thumbnail(144, 144);
+                //    image.Write("C:/Global/Website/Gallery/thm/" + ID + Name);
+                //}
+            }
+            this.StateHasChanged();
+        }
+        var Off = DateTime.UtcNow - DT;
+         Console.WriteLine("Time: " + Off.Milliseconds);
+
+    }
+}

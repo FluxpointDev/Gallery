@@ -2,4 +2,19 @@
 
 <h1>Hello, world!</h1>
 
-Welcome to your new app.
+<AuthorizeView>
+    <Authorized>
+        <h1>Hello @context.User.Identity.Name!</h1>
+        You are logged in. 🎉🎉🎉
+
+    </Authorized>
+    <NotAuthorized>
+        <h1>Hello random user</h1>
+        0_o
+    </NotAuthorized>
+</AuthorizeView>
+
+<form action="/login" method="post">
+    <input type="hidden" name="Provider" value="Discord" />
+    <button ButtonType="ButtonType.Submit">Login</button>
+</form>

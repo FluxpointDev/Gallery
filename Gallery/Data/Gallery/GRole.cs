@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Gallery.Database;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,5 +14,10 @@ namespace Gallery.Data
         public bool isAdmin = false;
         public bool isMod = false;
         public bool isApprover = false;
+
+        public void Update()
+        {
+            DB.R.Db("Gallery").Table("Roles").Get(id).Update(this).RunNoReply(DB.Con);
+        }
     }
 }

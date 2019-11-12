@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Gallery.Database;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,5 +15,10 @@ namespace Gallery.Data
         public bool isNsfw = false;
         public string owner = "";
         public Dictionary<int, GAccess> roleAccess = new Dictionary<int, GAccess>();
+
+        public void Update()
+        {
+            DB.R.Db("Gallery").Table("Albums").Get(id).Update(this).RunNoReply(DB.Con);
+        }
     }
 }

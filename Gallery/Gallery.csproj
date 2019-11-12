@@ -8,4 +8,15 @@
     <Folder Include="Services\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="IdGen" Version="2.0.3" />
+    <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="7.14.5" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="RethinkDb.Driver" Version="2.3.150" />
+    <PackageReference Include="SkiaSharp" Version="1.68.1-rc.165" />
+    <PackageReference Include="System.Drawing.Common" Version="4.6.0" />
+    <PackageReference Include="System.Reactive" Version="4.2.0" />
+    <PackageReference Include="Tewr.Blazor.FileReader" Version="1.1.0.19274" />
+  </ItemGroup>
+
 </Project>
