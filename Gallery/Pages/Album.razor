@@ -1,0 +1,45 @@
+﻿@page "/album/{albumid}"
+@using Gallery.Data
+@using Gallery.Database
+
+@if (albumid == "0")
+{
+    <h1>Loading</h1>
+}
+else if (GetAlbum == null)
+{
+    <h1>Unknown gallery</h1>
+}
+else
+{
+    <h1>@GetAlbum.name</h1>
+    if (Images.Count == 0)
+    {
+        <h3>No images</h3>
+    }
+    else
+    {
+        foreach(GImage i in Images)
+        {
+            <h3>@i.name</h3>
+        }
+    }
+}
+
+@code {
+    [Parameter]
+    public string albumid { get; set; } = "0";
+
+    public GAlbum GetAlbum = null;
+
+    public List<GImage> Images = new List<GImage>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (DB.Albums.TryGetValue(int.Parse(albumid), out GAlbum GAlbum))
+        {
+            GetAlbum = GAlbum;
+            Images = DB.Images.Values.Where(x => x.albums.Contains(GetAlbum.id)).ToList();
+        }
+    }
+}

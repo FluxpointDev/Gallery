@@ -1,6 +1,7 @@
 ﻿@page "/"
-
-<h1>Hello, world!</h1>
+@using MatBlazor
+@using Gallery.Data
+@using Gallery.Database
 
 <AuthorizeView>
     <Authorized>
@@ -11,10 +12,49 @@
     <NotAuthorized>
         <h1>Hello random user</h1>
         0_o
+        <form action="/login" method="post">
+            <input type="hidden" name="Provider" value="Discord" />
+            <button ButtonType="ButtonType.Submit">Login</button>
+        </form>
+
     </NotAuthorized>
 </AuthorizeView>
 
-<form action="/login" method="post">
-    <input type="hidden" name="Provider" value="Discord" />
-    <button ButtonType="ButtonType.Submit">Login</button>
-</form>
+<div class="mat-layout-grid">
+    <div class="mat-layout-grid-inner">
+
+        @foreach (GAlbum a in DB.Albums.Values)
+        {
+        <div class="mat-layout-grid-cell">
+            <MatCard class="demo-mat-card">
+                <MatRipple>
+                    <a href="@("/album/" + a.id.ToString())">
+                        <MatCardContent>
+                            <MatCardMedia Wide="true" ImageUrl="https://gallery.fluxpoint.dev/i/2019/08/05/d220e09b-cu_e200.png"></MatCardMedia>
+                            <div class="demo-mat-card-content">
+                                <MatHeadline6 class="demo-mat-card-clean-margin">
+                                    @a.name
+                                </MatHeadline6>
+                            </div>
+                        </MatCardContent>
+                    </a>
+                </MatRipple>
+            </MatCard>
+        </div>
+        }
+    </div>
+</div>
+
+<style>
+    .demo-mat-card {
+        max-width: 400px;
+    }
+
+    .demo-mat-card-content {
+        padding: 1rem;
+    }
+
+    .demo-mat-card-clean-margin {
+        margin: 0px;
+    }
+</style>

@@ -15,6 +15,10 @@ namespace Gallery.Data
         public bool isCharacter = false;
         public string description = "";
 
+        public void Add()
+        {
+            DB.R.Db("Gallery").Table("Tags").Insert(this).RunNoReply(DB.Con);
+        }
         public void Update()
         {
             DB.R.Db("Gallery").Table("Tags").Get(id).Update(this).RunNoReply(DB.Con);

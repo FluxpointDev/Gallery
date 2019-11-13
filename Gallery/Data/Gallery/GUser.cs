@@ -11,7 +11,6 @@ namespace Gallery.Data
         public string id;
         public List<int> roles = new List<int>();
         public UploadSet upload = new UploadSet();
-
         public class UploadSet
         {
             public int imageLimit = 0;
@@ -19,6 +18,10 @@ namespace Gallery.Data
             public int sizeLimit = 200;
         }
 
+        public void Add()
+        {
+            DB.R.Db("Gallery").Table("Users").Insert(this).RunNoReply(DB.Con);
+        }
         public void Update()
         {
             DB.R.Db("Gallery").Table("Users").Get(id).Update(this).RunNoReply(DB.Con);

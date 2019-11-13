@@ -14,6 +14,7 @@ using Blazor.FileReader;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
 using Gallery.Database;
+using EmbeddedBlazorContent;
 
 namespace Gallery
 {
@@ -33,6 +34,7 @@ namespace Gallery
             services.AddRazorPages();
             services.AddFileReaderService(options => options.InitializeOnFirstCall = true);
             services.AddSingleton<RethinkUpdaterService>();
+            services.AddSingleton<System.Net.Http.HttpClient>();
             services.AddServerSideBlazor().AddHubOptions(o =>
             {
                 o.MaximumReceiveMessageSize = 10 * 1024 * 1024; // 10MB
@@ -83,6 +85,7 @@ namespace Gallery
             Console.WriteLine("ID " + Program.Gen.CreateId());
             Console.WriteLine("ID " + Program.Gen.CreateId());
 
+            app.UseEmbeddedBlazorContent(typeof(MatBlazor.BaseMatComponent).Assembly);
             app.UseStaticFiles();
             app.UseAuthentication();
             app.UseAuthorization();

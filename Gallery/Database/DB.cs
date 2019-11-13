@@ -16,7 +16,14 @@ namespace Gallery.Database
         public static bool Connected = false;
         public static Dictionary<string, RethinkUser> Users = new Dictionary<string, RethinkUser>();
         public static Dictionary<string, GUser> GalleryUsers = new Dictionary<string, GUser>();
-
+        public static Dictionary<int, GAlbum> Albums = new Dictionary<int, GAlbum>
+        {
+            { 1, new GAlbum {id = 1, name = "Test album 1" } },
+             { 2, new GAlbum {id = 1, name = "Test album 2" } },
+              { 3, new GAlbum {id = 1, name = "Test album 3" } },
+               { 4, new GAlbum {id = 1, name = "Test album 4" } },
+        };
+        public static Dictionary<string, GImage> Images = new Dictionary<string, GImage>();
         public static Task Start()
         {
             Console.WriteLine("Connecting to DB");
