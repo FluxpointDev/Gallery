@@ -1,0 +1,53 @@
+﻿@page "/album/{albumid}"
+@using Gallery.Data
+@using Gallery.Database
+
+@if (albumid == "0")
+{
+    <h1>Loading</h1>
+}
+else if (GetAlbum == null)
+{
+    <h1>Unknown gallery</h1>
+}
+else
+{
+    @if (Images == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <RadzenDataList WrapItems="true" AllowPaging="true" Data="@Images" TItem="GImage">
+            <Template Context="order">
+                <RadzenCard Style="width:300px;">
+                    <div class="row">
+                        <img src="@order.GetImage(imageType.Thumbnail)"/>
+                    </div>
+
+                </RadzenCard>
+            </Template>
+        </RadzenDataList>
+    }
+}
+
+@code {
+    [Parameter]
+    public string albumid { get; set; } = "0";
+
+    public GAlbum GetAlbum = null;
+
+    public IEnumerable<GImage> Images = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (DB.Albums.TryGetValue(int.Parse(albumid), out GAlbum GAlbum))
+        {
+            GetAlbum = GAlbum;
+            await Task.Run(() =>
+            {
+                Images = DB.Images.Values.Where(x => x.albums.Contains(GetAlbum.id) & !x.deleted & !x.hidden);
+            });
+        }
+    }
+}

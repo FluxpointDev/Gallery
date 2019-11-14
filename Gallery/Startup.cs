@@ -78,11 +78,6 @@ namespace Gallery
                 RethinkUpdaterService RU = app.ApplicationServices.GetService<RethinkUpdaterService>();
                 RU.Start();
             }
-
-            Image bm = Image.FromFile("c:/Global/Image.png");
-            string Hash = Program.getMd5Hash(Program.imageToByteArray(bm));
-            Console.WriteLine("Hash " + Hash);
-            Console.WriteLine("ID " + Program.Gen.CreateId());
             Console.WriteLine("ID " + Program.Gen.CreateId());
 
             app.UseEmbeddedBlazorContent(typeof(MatBlazor.BaseMatComponent).Assembly);

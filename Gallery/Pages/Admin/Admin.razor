@@ -1,0 +1,13 @@
+﻿@page "/admin"
+@using Gallery.Database
+@attribute [Authorize(Roles = "owner, admin")]
+<title>Admin</title>
+<h3>Welcome to the admin page!</h3>
+
+<h5>Albums: @DB.Albums.Count</h5>
+<h5>Images: @DB.Images.Count</h5>
+<h5>Tags: @DB.Tags.Count</h5>
+
+@code {
+
+}

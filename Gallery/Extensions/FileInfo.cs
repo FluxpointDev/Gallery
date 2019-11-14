@@ -12,19 +12,56 @@ namespace Gallery
         {
             Name = fi.Name;
             Size = fi.Size;
-            Type = fi.Type;
-            LastModified = fi.LastModified;
-            LastModifiedDate = fi.LastModifiedDate;
+            if (Size < 1)
+                Status = FileStatus.InvalidSize;
+            if (Size > 5242880)
+                Status = FileStatus.MaxSize;
+            switch (fi.Type)
+            {
+                case "image/png":
+                    Type = "png";
+                    break;
+                case "image/jpeg":
+                    Type = "jpg";
+                    break;
+                case "image/gif":
+                    Type = "gif";
+                    break;
+                default:
+                    Status = FileStatus.InvalidType;
+                    break;
+            }
         }
         public string Name;
         public long Size;
         public string Type;
-        public long? LastModified;
-        public DateTime? LastModifiedDate;
-        public FileStatus Status = GFileInfo.FileStatus.List;
+        public FileStatus Status = GFileInfo.FileStatus.Pending;
+
+        public string GetStatusText()
+        {
+            switch (Status)
+            {
+                case FileStatus.Pending:
+                    return "Pending";
+                case FileStatus.Duplicate:
+                    return "Duplicate found";
+                case FileStatus.Exception:
+                    return "Server error";
+                case FileStatus.InvalidSize:
+                    return "Invalid size";
+                case FileStatus.InvalidType:
+                    return "Invalid type";
+                case FileStatus.Ok:
+                    return "Done!";
+                case FileStatus.MaxSize:
+                    return "Max size limit";
+            }
+            return "ERROR!";
+        }
+
         public enum FileStatus
         {
-            List, Error, Ok, Dupe
+            Pending, Ok, Exception, InvalidSize, MaxSize, InvalidType, Duplicate
         }
     }
 }

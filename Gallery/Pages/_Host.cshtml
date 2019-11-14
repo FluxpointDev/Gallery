@@ -11,6 +11,7 @@
     <title>Gallery</title>
     <base href="~/" />
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/default.css">
     <link href="css/site.css" rel="stylesheet" />
     @Html.EmbeddedBlazorContent()
 </head>
@@ -18,7 +19,7 @@
     <app>
         @(await Html.RenderComponentAsync<App>(RenderMode.Server))
     </app>
-
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
     <script src="_framework/blazor.server.js"></script>
 </body>
 </html>

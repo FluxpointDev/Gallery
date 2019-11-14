@@ -16,14 +16,10 @@ namespace Gallery.Database
         public static bool Connected = false;
         public static Dictionary<string, RethinkUser> Users = new Dictionary<string, RethinkUser>();
         public static Dictionary<string, GUser> GalleryUsers = new Dictionary<string, GUser>();
-        public static Dictionary<int, GAlbum> Albums = new Dictionary<int, GAlbum>
-        {
-            { 1, new GAlbum {id = 1, name = "Test album 1" } },
-             { 2, new GAlbum {id = 1, name = "Test album 2" } },
-              { 3, new GAlbum {id = 1, name = "Test album 3" } },
-               { 4, new GAlbum {id = 1, name = "Test album 4" } },
-        };
+        public static Dictionary<int, GAlbum> Albums = new Dictionary<int, GAlbum>();
         public static Dictionary<string, GImage> Images = new Dictionary<string, GImage>();
+        public static Dictionary<int, GTag> Tags = new Dictionary<int, GTag>();
+
         public static Task Start()
         {
             Console.WriteLine("Connecting to DB");
@@ -35,8 +31,18 @@ namespace Gallery.Database
             .Timeout(60)
             .Connect();
             Con.CheckOpen();
-            //Cursor<RethinkBot> botlist = R.Db("Global").Table("Bots").RunCursor<RethinkBot>(Con);
-            //Bots = botlist.ToDictionary(x => x.ID, x => x);
+            Cursor<GUser> users = R.Db("Gallery").Table("Users").RunCursor<GUser>(Con);
+            GalleryUsers = users.ToDictionary(x => x.id, x => x);
+
+            Cursor<GAlbum> albums = R.Db("Gallery").Table("Albums").RunCursor<GAlbum>(Con);
+            Albums = albums.ToDictionary(x => x.id, x => x);
+
+            Cursor<GImage> images = R.Db("Gallery").Table("Images").RunCursor<GImage>(Con);
+            Images = images.ToDictionary(x => x.id, x => x);
+
+            Cursor<GTag> tags = R.Db("Gallery").Table("Tags").RunCursor<GTag>(Con);
+            Tags = tags.ToDictionary(x => x.id, x => x);
+
             Connected = true;
             return Task.CompletedTask;
         }

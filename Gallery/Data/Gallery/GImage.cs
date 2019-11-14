@@ -10,6 +10,7 @@ namespace Gallery.Data
     {
         public string id;
         public string name;
+        public string type;
         public string link = "";
         public string source = "";
         public string author;
@@ -24,6 +25,21 @@ namespace Gallery.Data
         public bool hidden = false;
         public bool deleted = false;
         public bool allowDiscord = true;
+
+        public string GetImage(imageType type)
+        {
+            switch (type)
+            {
+                case imageType.Full:
+                    return "C:/Global/Website/Gallery/img/" + id + "." + type;
+                case imageType.Medium:
+                    return "C:/Global/Website/Gallery/med/" + id + "." + type;
+                case imageType.Thumbnail:
+                    return "C:/Global/Website/Gallery/thm/" + id + "." + type; 
+            }
+            return "";
+        }
+
         public void Add()
         {
             DB.R.Db("Gallery").Table("Images").Insert(this).RunNoReply(DB.Con);
@@ -32,5 +48,9 @@ namespace Gallery.Data
         {
             DB.R.Db("Gallery").Table("Images").Get(id).Update(this).RunNoReply(DB.Con);
         }
+    }
+    public enum imageType
+    {
+        Full, Medium, Thumbnail
     }
 }

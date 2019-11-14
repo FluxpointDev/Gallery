@@ -1,0 +1,243 @@
+﻿@page "/upload"
+@attribute [Authorize(Roles = "owner")]
+@using System.IO;
+@using Blazor.FileReader
+@using ImageMagick
+@inject IFileReaderService fileReaderService
+@using MatBlazor
+@using Gallery.Data
+@using Gallery.Database
+@inject AuthenticationStateProvider Authentication
+
+<style>
+    .@dropTargetClass {
+        display:block;
+        padding: 20px;
+        margin-bottom: 10px;
+        border: 1px dashed black;
+        border-radius: 5px;
+    }
+    .@dropTargetDragClass {
+        border-color: orangered;
+        font-weight: bold;
+    }
+    .oi-thumb-up {
+    color: rgb(37,214,37);
+}
+.oi-x {
+    color: rgb(242,62,62);
+}
+</style>
+
+<div class="@DropClass"
+     @ref=dropTargetElement
+     @ondrop=OnDrop
+     @ondragenter=OnDragEnter
+     @ondragleave=OnDragLeave>
+    Drop Files here.
+</div>
+<br />
+@if (status == UploadStatus.Uploading)
+{
+    <h3 class="mat-subtitle1">Uploading - @uploadCount/@maxCount</h3>
+    <MatProgressBar Indeterminate="true"></MatProgressBar>
+    <br />
+}
+else if (status == UploadStatus.Done)
+{
+    <h3 class="mat-subtitle1">Upload done</h3>
+    <MatProgressBar Progress="1.0"></MatProgressBar>
+}
+@if (FileList.Count != 0)
+{
+    <MatTable Items="@FileList" class="mat-elevation-z5">
+        <MatTableHeader>
+            <th>Status</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Size</th>
+            <th>Upload</th>
+        </MatTableHeader>
+        <MatTableRow>
+            @if (context.Status == GFileInfo.FileStatus.Pending)
+            {
+                <td></td>
+            }
+            else if (context.Status == GFileInfo.FileStatus.Ok)
+            {
+                <td><span class="oi oi-thumb-up"></span></td>
+            }
+            else
+            {
+                <td><span class="oi oi-x"></span></td>
+            }
+            <td>@context.Name</td>
+            <td>@context.Type</td>
+            <td>@context.Size</td>
+            <td>@context.GetStatusText()</td>
+        </MatTableRow>
+    </MatTable>
+    <br />
+}
+<button @onclick="ReadFile" disabled="@uploadDisabled" class="btn btn-primary">Upload images</button>
+
+
+@code {
+        ElementReference dropTargetElement;
+        IFileReaderRef dropReference;
+
+        const string dropTargetDragClass = "droptarget-drag";
+        const string dropTargetClass = "droptarget";
+    private List<string> _dropClasses = new List<string>() { dropTargetClass };
+
+    string DropClass => string.Join(" ", _dropClasses);
+
+    public bool uploadDisabled = false;
+
+    public UploadStatus status = UploadStatus.None;
+    public int maxCount = 0;
+    public int uploadCount = 0;
+    public enum UploadStatus
+    {
+        None, Uploading, Done
+    }
+
+
+    List<GFileInfo> FileList { get; } = new List<GFileInfo>();
+
+    protected override async Task OnAfterRenderAsync(bool isFirstRender)
+    {
+        if (isFirstRender)
+        {
+            dropReference = fileReaderService.CreateReference(dropTargetElement);
+            await dropReference.RegisterDropEventsAsync(true);
+        }
+    }
+
+    public void OnDragEnter(EventArgs e)
+    {
+        _dropClasses.Add(dropTargetDragClass);
+    }
+
+    public void OnDragLeave(EventArgs e)
+    {
+        _dropClasses.Remove(dropTargetDragClass);
+    }
+
+    public async Task OnDrop(EventArgs e)
+    {
+        _dropClasses.Remove(dropTargetDragClass);
+         await this.RefreshFileList();
+    }
+
+    private async Task RefreshFileList()
+    {
+        uploadDisabled = true;
+        this.FileList.Clear();
+        foreach (var file in await dropReference.EnumerateFilesAsync())
+        {
+            var fileInfo = await file.ReadFileInfoAsync();
+            GFileInfo Info = new GFileInfo(fileInfo);
+            if (Info.Status == GFileInfo.FileStatus.InvalidSize || Info.Status == GFileInfo.FileStatus.InvalidType)
+                continue;
+            this.FileList.Add(Info);
+        }
+        uploadDisabled = false;
+        this.StateHasChanged();
+    }
+
+    public async Task ReadFile()
+    {
+         uploadDisabled = true;
+        status = UploadStatus.Uploading;
+        maxCount = FileList.Count;
+        FileList.Clear();
+        var Auth = await Authentication.GetAuthenticationStateAsync();
+        foreach (var file in await dropReference.EnumerateFilesAsync())
+        {
+            GFileInfo fileInfo = new GFileInfo(await file.ReadFileInfoAsync());
+            if (fileInfo.Status != GFileInfo.FileStatus.Pending)
+            {
+                maxCount--;
+                FileList.Add(fileInfo);
+                this.StateHasChanged();
+                continue;
+            }
+            try
+            {
+                MemoryStream Stream = await file.CreateMemoryStreamAsync();
+                string Hash = Program.getMd5Hash(Stream.ToArray());
+                Console.WriteLine($"Hash: " + Hash);
+                if (DB.Images.Values.Where(x => x.hash == Hash).Count() == 1)
+                {
+                    fileInfo.Status = GFileInfo.FileStatus.Duplicate;
+                    maxCount--;
+                }
+                else
+                {
+                    MagickFormat Format = MagickFormat.Jpg;
+                    string ID = Program.Gen.CreateId().ToString();
+                    switch (fileInfo.Type)
+                    {
+                        case "png":
+                            Format = MagickFormat.Png;
+                            break;
+                        case "gif":
+                            Format = MagickFormat.Gif;
+                            using (FileStream files = new FileStream("C:/Global/Website/Gallery/img/" + ID + "." + fileInfo.Type, FileMode.Create, FileAccess.Write))
+                            {
+                                Stream.WriteTo(files);
+                            }
+                            break;
+                    }
+                    int height = 0;
+                    int width = 0;
+                    using (MagickImage image = new MagickImage(Stream, new MagickReadSettings { ColorType = ColorType.Optimize, Format = Format, FrameIndex = 0, FrameCount = 1 }))
+                    {
+                        image.Strip();
+                        height = image.Height;
+                        width = image.Width;
+                        if (Format != MagickFormat.Gif)
+                            image.Write("C:/Global/Website/Gallery/img/" + ID + "." + fileInfo.Type, Format);
+
+                        image.Resize(792, 594);
+                        image.Write("C:/Global/Website/Gallery/med/" + ID + "." + fileInfo.Type, Format);
+                        image.Thumbnail(200, 200);
+                        image.Write("C:/Global/Website/Gallery/thm/" + ID + "." + fileInfo.Type, Format);
+                    }
+                    fileInfo.Status = GFileInfo.FileStatus.Ok;
+                    GImage img = new GImage
+                    {
+                        id = ID,
+                        name = fileInfo.Name.Replace("." + fileInfo.Type, ""),
+                        author = Auth.User.GetId(),
+                        date = DateTime.UtcNow,
+                        filesize = fileInfo.Size,
+                        hash = Hash,
+                        height = height,
+                        width = width,
+                        type = fileInfo.Type,
+                        albums = new List<int>
+                        {
+                            1
+                        }
+                    };
+                    DB.Images.Add(ID, img);
+                    img.Add();
+                    uploadCount++;
+                }
+            }
+            catch (Exception ex)
+            {
+                maxCount--;
+                fileInfo.Status = GFileInfo.FileStatus.Exception;
+            }
+            FileList.Add(fileInfo);
+            this.StateHasChanged();
+        }
+        await dropReference.ClearValue();
+        status = UploadStatus.Done;
+        this.StateHasChanged();
+    }
+
+}
