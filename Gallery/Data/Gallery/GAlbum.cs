@@ -13,8 +13,18 @@ namespace Gallery.Data
         public bool isPublic = false;
         public bool isNsfw = false;
         public string owner = "";
+        public string thumbnailImage = "";
         public int subAlbum = 0;
         public Dictionary<int, GAccess> roleAccess = new Dictionary<int, GAccess>();
+
+        public string GetThumbnailImage()
+        {
+            if (thumbnailImage == "")
+                return "";
+            if (DB.Images.TryGetValue(thumbnailImage, out GImage img))
+                return img.GetImage(imageType.Thumbnail);
+            return "";
+        }
 
         public void Add()
         {

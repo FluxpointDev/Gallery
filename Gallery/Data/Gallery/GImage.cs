@@ -15,7 +15,7 @@ namespace Gallery.Data
         public string source = "";
         public string author;
         public List<int> tags = new List<int>();
-        public List<int> albums = new List<int>();
+        public int album = 0;
         public DateTime date = DateTime.UtcNow;
         public string hash;
         public int width;

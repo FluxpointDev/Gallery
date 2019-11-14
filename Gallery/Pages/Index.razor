@@ -23,14 +23,14 @@
 <div class="mat-layout-grid">
     <div class="mat-layout-grid-inner">
 
-        @foreach (GAlbum a in DB.Albums.Values)
+        @foreach (GAlbum a in DB.Albums.Values.Where(x => !x.isNsfw))
         {
         <div class="mat-layout-grid-cell">
             <MatCard class="demo-mat-card">
                 <MatRipple>
                     <a href="@("/album/" + a.id.ToString())">
                         <MatCardContent>
-                            <MatCardMedia Wide="true" ImageUrl="https://gallery.fluxpoint.dev/i/2019/08/05/d220e09b-cu_e200.png"></MatCardMedia>
+                            <MatCardMedia Wide="true" Style="width:300px;" ImageUrl="@a.GetThumbnailImage()"></MatCardMedia>
                             <div class="demo-mat-card-content">
                                 <MatHeadline6 class="demo-mat-card-clean-margin">
                                     @a.name

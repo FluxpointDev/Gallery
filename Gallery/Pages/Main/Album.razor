@@ -10,6 +10,10 @@ else if (GetAlbum == null)
 {
     <h1>Unknown gallery</h1>
 }
+else if (Private)
+{
+    <h3>You do not have permission to access this gallery</h3>
+}
 else
 {
     @if (Images == null)
@@ -18,36 +22,52 @@ else
     }
     else
     {
-        <RadzenDataList WrapItems="true" AllowPaging="true" Data="@Images" TItem="GImage">
+        <h1>@GetAlbum.name</h1>
+        if (Images.Count() == 0)
+        {
+            <p>This album has no images :(</p>
+        }
+        <RadzenDataList WrapItems="true" PageSize="12" AllowPaging="true" Data="@Images" TItem="GImage">
             <Template Context="order">
                 <RadzenCard Style="width:300px;">
-                    <div class="row">
-                        <img src="@order.GetImage(imageType.Thumbnail)"/>
-                    </div>
-
+                    <img src="@order.GetImage(imageType.Thumbnail)" />
                 </RadzenCard>
             </Template>
         </RadzenDataList>
     }
 }
 
+<style>
+    .card {
+    padding: 1px !important;
+}
+</style>
+
 @code {
     [Parameter]
     public string albumid { get; set; } = "0";
 
     public GAlbum GetAlbum = null;
-
+    public bool Private = false;
     public IEnumerable<GImage> Images = null;
 
     protected override async Task OnInitializedAsync()
     {
         if (DB.Albums.TryGetValue(int.Parse(albumid), out GAlbum GAlbum))
         {
-            GetAlbum = GAlbum;
-            await Task.Run(() =>
+            if (!GAlbum.isPublic)
             {
-                Images = DB.Images.Values.Where(x => x.albums.Contains(GetAlbum.id) & !x.deleted & !x.hidden);
-            });
+                Private = true;
+                GetAlbum = GAlbum;
+            }
+            else
+            {
+                GetAlbum = GAlbum;
+                await Task.Run(() =>
+                {
+                    Images = DB.Images.Values.Where(x => x.album == GetAlbum.id & !x.deleted & !x.hidden);
+                });
+            }
         }
     }
 }

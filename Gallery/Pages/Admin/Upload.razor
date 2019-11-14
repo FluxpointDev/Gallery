@@ -29,6 +29,9 @@
 }
 </style>
 
+<h3>Album</h3>
+<RadzenTextBox Style="margin-bottom: 20px" Change="@(args => Change(args))" />
+<br />
 <div class="@DropClass"
      @ref=dropTargetElement
      @ondrop=OnDrop
@@ -47,6 +50,7 @@ else if (status == UploadStatus.Done)
 {
     <h3 class="mat-subtitle1">Upload done</h3>
     <MatProgressBar Progress="1.0"></MatProgressBar>
+    <br />
 }
 @if (FileList.Count != 0)
 {
@@ -60,17 +64,18 @@ else if (status == UploadStatus.Done)
         </MatTableHeader>
         <MatTableRow>
             @if (context.Status == GFileInfo.FileStatus.Pending)
-            {
+                {
                 <td></td>
-            }
-            else if (context.Status == GFileInfo.FileStatus.Ok)
-            {
+                }
+                else if (context.Status == GFileInfo.FileStatus.Ok)
+                {
                 <td><span class="oi oi-thumb-up"></span></td>
-            }
-            else
-            {
+                }
+                else
+                {
                 <td><span class="oi oi-x"></span></td>
-            }
+                }
+            /**/
             <td>@context.Name</td>
             <td>@context.Type</td>
             <td>@context.Size</td>
@@ -83,11 +88,11 @@ else if (status == UploadStatus.Done)
 
 
 @code {
-        ElementReference dropTargetElement;
-        IFileReaderRef dropReference;
+    ElementReference dropTargetElement;
+    IFileReaderRef dropReference;
 
-        const string dropTargetDragClass = "droptarget-drag";
-        const string dropTargetClass = "droptarget";
+    const string dropTargetDragClass = "droptarget-drag";
+    const string dropTargetClass = "droptarget";
     private List<string> _dropClasses = new List<string>() { dropTargetClass };
 
     string DropClass => string.Join(" ", _dropClasses);
@@ -102,6 +107,12 @@ else if (status == UploadStatus.Done)
         None, Uploading, Done
     }
 
+    int Album = 0;
+
+    void Change(string value)
+    {
+        Album = int.Parse(value);
+    }
 
     List<GFileInfo> FileList { get; } = new List<GFileInfo>();
 
@@ -127,7 +138,7 @@ else if (status == UploadStatus.Done)
     public async Task OnDrop(EventArgs e)
     {
         _dropClasses.Remove(dropTargetDragClass);
-         await this.RefreshFileList();
+        await this.RefreshFileList();
     }
 
     private async Task RefreshFileList()
@@ -148,7 +159,7 @@ else if (status == UploadStatus.Done)
 
     public async Task ReadFile()
     {
-         uploadDisabled = true;
+        uploadDisabled = true;
         status = UploadStatus.Uploading;
         maxCount = FileList.Count;
         FileList.Clear();
@@ -217,10 +228,7 @@ else if (status == UploadStatus.Done)
                         height = height,
                         width = width,
                         type = fileInfo.Type,
-                        albums = new List<int>
-                        {
-                            1
-                        }
+                        album = Album
                     };
                     DB.Images.Add(ID, img);
                     img.Add();
