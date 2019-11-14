@@ -25,7 +25,7 @@ namespace Gallery
             CreateHostBuilder(args).Build().Run();
         }
 
-        public static IdGenerator Gen = new IdGenerator(0, new DateTime(2019, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+        public static IdGenerator Gen = new IdGenerator(0, new DateTime(2019, 11, 14, 9, 0, 0, DateTimeKind.Utc));
 
         public static string getMd5Hash(byte[] buffer)
         {

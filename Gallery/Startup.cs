@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
 using Gallery.Database;
 using EmbeddedBlazorContent;
+using Microsoft.AspNetCore.ResponseCompression;
 
 namespace Gallery
 {
@@ -33,13 +34,17 @@ namespace Gallery
         {
             services.AddRazorPages();
             services.AddFileReaderService(options => options.InitializeOnFirstCall = true);
+            services.AddResponseCompression(opts =>
+            {
+                opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+                    new[] { "application/octet-stream" });
+            });
             services.AddSingleton<RethinkUpdaterService>();
             services.AddSingleton<System.Net.Http.HttpClient>();
             services.AddServerSideBlazor().AddHubOptions(o =>
             {
                 o.MaximumReceiveMessageSize = 10 * 1024 * 1024; // 10MB
             });
-            services.AddServerSideBlazor();
             services.AddAuthentication(options =>
             {
                 options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -80,6 +85,11 @@ namespace Gallery
             }
             Console.WriteLine("ID " + Program.Gen.CreateId());
 
+            app.UseResponseCompression();
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
             app.UseEmbeddedBlazorContent(typeof(MatBlazor.BaseMatComponent).Assembly);
             app.UseStaticFiles();
             app.UseAuthentication();
