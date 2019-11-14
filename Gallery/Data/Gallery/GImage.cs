@@ -10,32 +10,41 @@ namespace Gallery.Data
     {
         public string id;
         public string name;
-        public string type;
         public string link = "";
         public string source = "";
-        public string author;
+        public string author = "";
         public List<int> tags = new List<int>();
         public int album = 0;
         public DateTime date = DateTime.UtcNow;
-        public string hash;
-        public int width;
-        public int height;
-        public long filesize;
+        public FileInfo file = new FileInfo();
+        public class FileInfo
+        {
+            public string type;
+            public string hash;
+            public int width;
+            public int height;
+            public long size;
+        }
+       
         public Dictionary<string, GComment> comments = new Dictionary<string, GComment>();
-        public bool hidden = false;
-        public bool deleted = false;
-        public bool allowDiscord = true;
 
+        public Options options = new Options();
+        public class Options
+        {
+            public bool isHidden = false;
+            public bool isDeleted = false;
+            public bool allowDiscord = true;
+        }
         public string GetImage(imageType type)
         {
             switch (type)
             {
                 case imageType.Full:
-                    return "C:/Global/Website/Gallery/img/" + id + "." + type;
+                    return "https://img.fluxpoint.dev/" + id + "." + file.type;
                 case imageType.Medium:
-                    return "C:/Global/Website/Gallery/med/" + id + "." + type;
+                    return "https://img.fluxpoint.dev/med/" + id + "." + file.type;
                 case imageType.Thumbnail:
-                    return "C:/Global/Website/Gallery/thm/" + id + "." + type; 
+                    return "https://img.fluxpoint.dev/thm/" + id + "." + file.type; 
             }
             return "";
         }

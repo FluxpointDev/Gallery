@@ -30,12 +30,13 @@
                 <MatRipple>
                     <a href="@("/album/" + a.id.ToString())">
                         <MatCardContent>
-                            <MatCardMedia Wide="true" Style="width:300px;" ImageUrl="@a.GetThumbnailImage()"></MatCardMedia>
-                            <div class="demo-mat-card-content">
-                                <MatHeadline6 class="demo-mat-card-clean-margin">
-                                    @a.name
-                                </MatHeadline6>
-                            </div>
+                                <MatCardMedia Wide="true" Style="width:320px;" ImageUrl="@a.GetThumbnailImage()"></MatCardMedia>
+                            
+                                <div class="demo-mat-card-content">
+                                    <MatHeadline6 class="demo-mat-card-clean-margin">
+                                        @a.name
+                                    </MatHeadline6>
+                                </div>
                         </MatCardContent>
                     </a>
                 </MatRipple>
@@ -47,7 +48,7 @@
 
 <style>
     .demo-mat-card {
-        max-width: 400px;
+        max-width: 320px;
     }
 
     .demo-mat-card-content {

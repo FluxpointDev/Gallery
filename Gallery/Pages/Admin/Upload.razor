@@ -75,7 +75,6 @@ else if (status == UploadStatus.Done)
                 {
                 <td><span class="oi oi-x"></span></td>
                 }
-            /**/
             <td>@context.Name</td>
             <td>@context.Type</td>
             <td>@context.Size</td>
@@ -179,7 +178,7 @@ else if (status == UploadStatus.Done)
                 MemoryStream Stream = await file.CreateMemoryStreamAsync();
                 string Hash = Program.getMd5Hash(Stream.ToArray());
                 Console.WriteLine($"Hash: " + Hash);
-                if (DB.Images.Values.Where(x => x.hash == Hash).Count() == 1)
+                if (DB.Images.Values.Where(x => x.file.hash == Hash).Count() == 1)
                 {
                     fileInfo.Status = GFileInfo.FileStatus.Duplicate;
                     maxCount--;
@@ -223,11 +222,14 @@ else if (status == UploadStatus.Done)
                         name = fileInfo.Name.Replace("." + fileInfo.Type, ""),
                         author = Auth.User.GetId(),
                         date = DateTime.UtcNow,
-                        filesize = fileInfo.Size,
-                        hash = Hash,
-                        height = height,
-                        width = width,
-                        type = fileInfo.Type,
+                        file = new GImage.FileInfo
+                        {
+                            hash = Hash,
+                            height = height,
+                            width = width,
+                            size = fileInfo.Size,
+                            type = fileInfo.Type
+                        },
                         album = Album
                     };
                     DB.Images.Add(ID, img);

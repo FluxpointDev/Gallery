@@ -29,7 +29,7 @@ else
         }
         <RadzenDataList WrapItems="true" PageSize="12" AllowPaging="true" Data="@Images" TItem="GImage">
             <Template Context="order">
-                <RadzenCard Style="width:300px;">
+                <RadzenCard Style="width:320px;">
                     <img src="@order.GetImage(imageType.Thumbnail)" />
                 </RadzenCard>
             </Template>
@@ -40,6 +40,7 @@ else
 <style>
     .card {
     padding: 1px !important;
+    max-width: 320px;
 }
 </style>
 
@@ -65,7 +66,7 @@ else
                 GetAlbum = GAlbum;
                 await Task.Run(() =>
                 {
-                    Images = DB.Images.Values.Where(x => x.album == GetAlbum.id & !x.deleted & !x.hidden);
+                    Images = DB.Images.Values.Where(x => x.album == GetAlbum.id & !x.options.isDeleted & !x.options.isHidden);
                 });
             }
         }
