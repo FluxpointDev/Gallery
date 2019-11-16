@@ -4,9 +4,11 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using DevTools;
 using Gallery.Data;
 using IdGen;
 using Microsoft.AspNetCore;
@@ -21,6 +23,7 @@ namespace Gallery
     {
         public static void Main(string[] args)
         {
+            DisableConsoleQuickEdit.Go();
             Config.SetConfig();
             CreateHostBuilder(args).Build().Run();
         }
@@ -46,6 +49,8 @@ namespace Gallery
             image.Save(ms, ImageFormat.Bmp);
             return ms.ToArray();
         }
+
+        public static HttpClient Http = new HttpClient();
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)

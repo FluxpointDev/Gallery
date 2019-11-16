@@ -21,4 +21,10 @@
     <PackageReference Include="Tewr.Blazor.FileReader" Version="1.1.0.19274" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="DisableConsoleQuickEdit">
+      <HintPath>..\..\..\..\Visual Studio 2017\Projects\DevBot\DevBot\bin\Debug\DisableConsoleQuickEdit.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

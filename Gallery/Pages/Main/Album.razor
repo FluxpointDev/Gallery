@@ -29,7 +29,7 @@ else
         }
         <RadzenDataList WrapItems="true" PageSize="12" AllowPaging="true" Data="@Images" TItem="GImage">
             <Template Context="order">
-                <RadzenCard Style="width:320px;">
+                <RadzenCard Style="width:320px; height:200px;">
                     <img src="@order.GetImage(imageType.Thumbnail)" />
                 </RadzenCard>
             </Template>
@@ -38,9 +38,28 @@ else
 }
 
 <style>
-    .card {
-    padding: 1px !important;
+     .card {
+    width: 320px;
     max-width: 320px;
+    height: 200px;
+    max-height: 200px;
+}
+
+img {
+    width: 320px;
+    max-width: 320px;
+    height: 200px;
+    max-height: 200px;
+}
+    .ui-g > div {
+    margin: 0.3rem !important;
+}
+    .ui-g {
+    margin-left: 20px;
+}
+.card {
+    border: none !important;
+    padding: 0px !important;
 }
 </style>
 

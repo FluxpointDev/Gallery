@@ -20,11 +20,13 @@ namespace Gallery.Data
 
         public void Add()
         {
-            DB.R.Db("Gallery").Table("Users").Insert(this).RunNoReply(DB.Con);
+            if (!Config.DevMode)
+                DB.R.Db("Gallery").Table("Users").Insert(this).RunNoReply(DB.Con);
         }
         public void Update()
         {
-            DB.R.Db("Gallery").Table("Users").Get(id).Update(this).RunNoReply(DB.Con);
+            if (!Config.DevMode)
+                DB.R.Db("Gallery").Table("Users").Get(id).Update(this).RunNoReply(DB.Con);
         }
     }
 }

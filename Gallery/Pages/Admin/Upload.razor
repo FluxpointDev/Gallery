@@ -212,9 +212,10 @@ else if (status == UploadStatus.Done)
 
                         image.Resize(792, 594);
                         image.Write("C:/Global/Website/Gallery/med/" + ID + "." + fileInfo.Type, Format);
-                        image.Thumbnail(200, 200);
+                        image.Resize(320, 200);
                         image.Write("C:/Global/Website/Gallery/thm/" + ID + "." + fileInfo.Type, Format);
                     }
+
                     fileInfo.Status = GFileInfo.FileStatus.Ok;
                     GImage img = new GImage
                     {

@@ -49,13 +49,29 @@ namespace Gallery.Data
             return "";
         }
 
+        public string GetFile(imageType type)
+        {
+            switch (type)
+            {
+                case imageType.Full:
+                    return "C:/Global/Website/Gallery/img/" + id + "." + file.type;
+                case imageType.Medium:
+                    return "C:/Global/Website/Gallery/med/" + id + "." + file.type;
+                case imageType.Thumbnail:
+                    return "C:/Global/Website/Gallery/thm/" + id + "." + file.type;
+            }
+            return "";
+        }
+
         public void Add()
         {
-            DB.R.Db("Gallery").Table("Images").Insert(this).RunNoReply(DB.Con);
+            if (!Config.DevMode)
+                DB.R.Db("Gallery").Table("Images").Insert(this).RunNoReply(DB.Con);
         }
         public void Update()
         {
-            DB.R.Db("Gallery").Table("Images").Get(id).Update(this).RunNoReply(DB.Con);
+            if (!Config.DevMode)
+                DB.R.Db("Gallery").Table("Images").Get(id).Update(this).RunNoReply(DB.Con);
         }
     }
     public enum imageType

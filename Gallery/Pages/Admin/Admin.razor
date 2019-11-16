@@ -1,6 +1,10 @@
 ﻿@page "/admin"
 @using Gallery.Database
+@using ImageMagick
+@using Gallery.Data
+@using System.IO
 @attribute [Authorize(Roles = "owner, admin")]
+
 <title>Admin</title>
 <h3>Welcome to the admin page!</h3>
 
@@ -8,6 +12,24 @@
 <h5>Images: @DB.Images.Count</h5>
 <h5>Tags: @DB.Tags.Count</h5>
 
-@code {
+<AuthorizeView Roles="owner">
+    <button OnClick="@ResizeImage()">Test</button>
+</AuthorizeView>
 
+@code {
+    public async Task ResizeImage()
+    {
+        Console.WriteLine("Starting regen");
+        foreach (GImage i in DB.Images.Values)
+        {
+            using (Stream Stream = File.OpenRead(i.GetFile(imageType.Full)))
+            using (MagickImage image = new MagickImage(Stream, new MagickReadSettings { ColorType = ColorType.Optimize }))
+            {
+                image.Resize(320, 200);
+                image.Write(i.GetFile(imageType.Thumbnail));
+            }
+            Console.WriteLine($"Done {i.id}");
+        }
+        Console.WriteLine("!!!");
+    }
 }

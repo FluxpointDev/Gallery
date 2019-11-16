@@ -17,11 +17,13 @@ namespace Gallery.Data
 
         public void Add()
         {
-            DB.R.Db("Gallery").Table("Roles").Insert(this).RunNoReply(DB.Con);
+            if (!Config.DevMode)
+                DB.R.Db("Gallery").Table("Roles").Insert(this).RunNoReply(DB.Con);
         }
         public void Update()
         {
-            DB.R.Db("Gallery").Table("Roles").Get(id).Update(this).RunNoReply(DB.Con);
+            if (!Config.DevMode)
+                DB.R.Db("Gallery").Table("Roles").Get(id).Update(this).RunNoReply(DB.Con);
         }
     }
 }
