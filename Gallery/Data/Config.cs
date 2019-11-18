@@ -19,12 +19,22 @@ namespace Gallery.Data
         public const ulong OwnerID = 190590364871032834;
 
         public static string ConfigPath { get; private set; }
+        public static string GlobalPath = "";
         private static string ConfigFile => Path.Combine(ConfigPath, "GalleryConfig.json");
         public static Dictionary<string, string> Tokens { get; } = new Dictionary<string, string>();
         public static bool DevMode = false;
         public static void SetConfig()
         {
-            ConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DiscordBots");
+            if (DevMode)
+            {
+                ConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DiscordBots");
+                GlobalPath = "C:/Global/Website/";
+            }
+            else
+            {
+                ConfigPath = "/root/config/";
+                GlobalPath = "/home/website/gallery/";
+            }
             Console.Title = DevMode ? $"[DEV] Gallery" : "Gallery";
 
             if (!Directory.Exists(ConfigPath))

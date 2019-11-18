@@ -11,25 +11,29 @@
 <h5>Albums: @DB.Albums.Count</h5>
 <h5>Images: @DB.Images.Count</h5>
 <h5>Tags: @DB.Tags.Count</h5>
-
 <AuthorizeView Roles="owner">
-    <button OnClick="@ResizeImage()">Test</button>
+    <button @onclick="TestClick">Test</button>
 </AuthorizeView>
 
+
+
 @code {
-    public async Task ResizeImage()
+    void TestClick()
     {
-        Console.WriteLine("Starting regen");
-        foreach (GImage i in DB.Images.Values)
+        foreach(GImage i in DB.Images.Values)
         {
-            using (Stream Stream = File.OpenRead(i.GetFile(imageType.Full)))
-            using (MagickImage image = new MagickImage(Stream, new MagickReadSettings { ColorType = ColorType.Optimize }))
+            Console.WriteLine(i.id);
+            using (FileStream fi = File.OpenRead(i.GetFile(imageType.Full)))
             {
-                image.Resize(320, 200);
-                image.Write(i.GetFile(imageType.Thumbnail));
+                using (MagickImage image = new MagickImage(fi, new MagickReadSettings { ColorType = ColorType.Optimize }))
+                {
+                    image.Resize(792, 594);
+                    image.Write(i.GetFile(imageType.Medium));
+                    image.Resize(320, 200);
+                    image.Write(i.GetFile(imageType.Thumbnail));
+                }
             }
-            Console.WriteLine($"Done {i.id}");
         }
-        Console.WriteLine("!!!");
+        Console.WriteLine("DONE");
     }
 }

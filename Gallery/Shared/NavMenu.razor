@@ -1,6 +1,8 @@
 ﻿@using MatBlazor
 @using Gallery.Data
 @using Gallery.Database
+@inject NavigationManager Navigation
+
 <div class="top-row pl-4 navbar navbar-dark">
     <a class="navbar-brand" href="">Gallery</a>
     <button class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -25,22 +27,22 @@
                             IEnumerable<GAlbum> subs = DB.Albums.Values.Where(x => x.subAlbum == a.id);
                             if (subs.Count() == 0)
                             {
-                                <MatNavItem Href="@("/album/" + @a.id)">• @a.name</MatNavItem>
+                        <div @onclick="(() => GoToPage(a.id))"><MatNavItem Href="@("/album/" + a.id.ToString() + "?")">• @a.name</MatNavItem></div>
                             }
                             else
                             {
-                                <MatNavSubMenu Class="navmenu-sub">
-                                    <MatNavSubMenuHeader>
-                                        <MatNavItem AllowSelection="false">@a.name</MatNavItem>
-                                    </MatNavSubMenuHeader>
-                                    <MatNavSubMenuList>
-                                        <MatNavItem Id="navitem" Href="@("/album/" + @a.id)">• @a.name</MatNavItem>
-                                        @foreach (GAlbum sa in subs)
+                        <MatNavSubMenu Class="navmenu-sub">
+                            <MatNavSubMenuHeader>
+                                <MatNavItem AllowSelection="false">@a.name</MatNavItem>
+                            </MatNavSubMenuHeader>
+                            <MatNavSubMenuList>
+                                <a @onclick="(() => GoToPage(a.id))"><MatNavItem Id="navitem">• @a.name</MatNavItem></a>
+                                @foreach (GAlbum sa in subs)
                                         {
-                                            <MatNavItem Href="@("/album/" + @sa.id)" Id="navitem">• @sa.name</MatNavItem>
+                            <a @onclick="(() => GoToPage(sa.id))"><MatNavItem Id="navitem">• @sa.name</MatNavItem></a>
                                         }
-                                    </MatNavSubMenuList>
-                                </MatNavSubMenu>
+                            </MatNavSubMenuList>
+                        </MatNavSubMenu>
                             }
                         }
                     </MatNavSubMenuList>
@@ -52,35 +54,41 @@
 
 <style>
     .mdc-nav-item {
-    color: white !important;
-}
-.mdc-sub-menu-icon {
-    color: rgb(202,197,197);
-}
-.mat-accordion .mat-expansion-panel.mat-expansion-panel--expanded .mat-expansion-panel__summary .after {
-    color: white;
-}
-.navmenu-sub .after {
-    display: none !important;
-}
-.mat-expansion-panel--expanded {
-    background-color: rgba(0,0,0,0.22) !important;
-}
+        color: white !important;
+    }
 
-.navmenu-sub {
-    margin-top: 0rem !important;
-    margin-bottom: 0rem !important;
-}
-.px-3 {
-    padding: 5px !important;
-}
-.mat-expansion-panel:not(:first-child) .mdc-nav-item:before {
-     content: '˃  ' !important;
-}
+    .mdc-sub-menu-icon {
+        color: rgb(202,197,197);
+    }
 
-.mat-expansion-panel--expanded:not(:first-child) .mdc-nav-item:before {
-     content: '˅  ' !important;
-}
+    .mat-accordion .mat-expansion-panel.mat-expansion-panel--expanded .mat-expansion-panel__summary .after {
+        color: white;
+    }
+
+    .navmenu-sub .after {
+        display: none !important;
+    }
+
+    .mat-expansion-panel--expanded {
+        background-color: rgba(0,0,0,0.22) !important;
+    }
+
+    .navmenu-sub {
+        margin-top: 0rem !important;
+        margin-bottom: 0rem !important;
+    }
+
+    .px-3 {
+        padding: 5px !important;
+    }
+
+    .mat-expansion-panel:not(:first-child) .mdc-nav-item:before {
+        content: '˃  ' !important;
+    }
+
+    .mat-expansion-panel--expanded:not(:first-child) .mdc-nav-item:before {
+        content: '˅  ' !important;
+    }
 </style>
 
 @code {
@@ -88,7 +96,10 @@
     bool albumMenuOpened = true;
     string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
-
+    void GoToPage(int path)
+    {
+        Navigation.NavigateTo("/album/" + path.ToString());
+    }
 
     void ToggleNavMenu()
     {

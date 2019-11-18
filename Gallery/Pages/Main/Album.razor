@@ -73,7 +73,12 @@ img {
 
     protected override async Task OnInitializedAsync()
     {
-        if (DB.Albums.TryGetValue(int.Parse(albumid), out GAlbum GAlbum))
+       
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+         if (DB.Albums.TryGetValue(int.Parse(albumid), out GAlbum GAlbum))
         {
             if (!GAlbum.isPublic)
             {

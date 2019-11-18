@@ -24,6 +24,9 @@ namespace Gallery
         public static void Main(string[] args)
         {
             DisableConsoleQuickEdit.Go();
+#if DEBUG
+            Config.DevMode = true;
+#endif
             Config.SetConfig();
             CreateHostBuilder(args).Build().Run();
         }

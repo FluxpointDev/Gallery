@@ -83,8 +83,6 @@ namespace Gallery
                 RethinkUpdaterService RU = app.ApplicationServices.GetService<RethinkUpdaterService>();
                 RU.Start();
             }
-            Console.WriteLine("ID " + Program.Gen.CreateId());
-
             app.UseResponseCompression();
             app.UseForwardedHeaders(new ForwardedHeadersOptions
             {

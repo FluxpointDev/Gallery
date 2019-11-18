@@ -54,11 +54,11 @@ namespace Gallery.Data
             switch (type)
             {
                 case imageType.Full:
-                    return "C:/Global/Website/Gallery/img/" + id + "." + file.type;
+                    return Config.GlobalPath + "img/" + id + "." + file.type;
                 case imageType.Medium:
-                    return "C:/Global/Website/Gallery/med/" + id + "." + file.type;
+                    return Config.GlobalPath + "med/" + id + "." + file.type;
                 case imageType.Thumbnail:
-                    return "C:/Global/Website/Gallery/thm/" + id + "." + file.type;
+                    return Config.GlobalPath + "thm/" + id + "." + file.type;
             }
             return "";
         }

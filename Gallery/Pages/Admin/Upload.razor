@@ -194,7 +194,7 @@ else if (status == UploadStatus.Done)
                             break;
                         case "gif":
                             Format = MagickFormat.Gif;
-                            using (FileStream files = new FileStream("C:/Global/Website/Gallery/img/" + ID + "." + fileInfo.Type, FileMode.Create, FileAccess.Write))
+                            using (FileStream files = new FileStream(Config.GlobalPath + "img/" + ID + "." + fileInfo.Type, FileMode.Create, FileAccess.Write))
                             {
                                 Stream.WriteTo(files);
                             }
@@ -208,12 +208,12 @@ else if (status == UploadStatus.Done)
                         height = image.Height;
                         width = image.Width;
                         if (Format != MagickFormat.Gif)
-                            image.Write("C:/Global/Website/Gallery/img/" + ID + "." + fileInfo.Type, Format);
+                            image.Write(Config.GlobalPath + "img/" + ID + "." + fileInfo.Type, Format);
 
                         image.Resize(792, 594);
-                        image.Write("C:/Global/Website/Gallery/med/" + ID + "." + fileInfo.Type, Format);
+                        image.Write(Config.GlobalPath + "med/" + ID + "." + fileInfo.Type, Format);
                         image.Resize(320, 200);
-                        image.Write("C:/Global/Website/Gallery/thm/" + ID + "." + fileInfo.Type, Format);
+                        image.Write(Config.GlobalPath + "thm/" + ID + "." + fileInfo.Type, Format);
                     }
 
                     fileInfo.Status = GFileInfo.FileStatus.Ok;
