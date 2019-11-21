@@ -12,7 +12,7 @@
 <h5>Images: @DB.Images.Count</h5>
 <h5>Tags: @DB.Tags.Count</h5>
 <AuthorizeView Roles="owner">
-    <button @onclick="TestClick">Test</button>
+    <button @onclick="TestClick">Regen thumbnails</button>
 </AuthorizeView>
 
 
@@ -22,14 +22,13 @@
     {
         foreach(GImage i in DB.Images.Values)
         {
-            Console.WriteLine(i.id);
             using (FileStream fi = File.OpenRead(i.GetFile(imageType.Full)))
             {
                 using (MagickImage image = new MagickImage(fi, new MagickReadSettings { ColorType = ColorType.Optimize }))
                 {
                     image.Resize(792, 594);
                     image.Write(i.GetFile(imageType.Medium));
-                    image.Resize(320, 200);
+                    image.Resize(320, 320);
                     image.Write(i.GetFile(imageType.Thumbnail));
                 }
             }

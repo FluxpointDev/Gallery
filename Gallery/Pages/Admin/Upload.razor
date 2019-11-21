@@ -30,8 +30,17 @@
 </style>
 
 <h3>Album</h3>
-<RadzenTextBox Style="margin-bottom: 20px" Change="@(args => Change(args))" />
+<MatAutocomplete Collection="@Albums" ItemType="GAlbum" ShowClearButton="true" Label="Select an album" CustomStringSelector="@(i => i.GetComboxName())" @bind-Value="@Album">
+    <ItemTemplate>
+        <div style="display: flex; flex-direction: row; width: 100%;">
+                <div style="flex: 1;">@context.GetComboxName()</div>
+        </div>
+    </ItemTemplate>
+</MatAutocomplete>
 <br />
+<br />
+@if (!uploadDisabled)
+{
 <div class="@DropClass"
      @ref=dropTargetElement
      @ondrop=OnDrop
@@ -40,6 +49,7 @@
     Drop Files here.
 </div>
 <br />
+}
 @if (status == UploadStatus.Uploading)
 {
     <h3 class="mat-subtitle1">Uploading - @uploadCount/@maxCount</h3>
@@ -83,8 +93,22 @@ else if (status == UploadStatus.Done)
     </MatTable>
     <br />
 }
-<button @onclick="ReadFile" disabled="@uploadDisabled" class="btn btn-primary">Upload images</button>
+@if (Album != null)
+{
+<button @onclick="ReadFile" disabled="@uploadDisabled" ShowClearButton="true" class="btn btn-primary">Upload images</button>
+}
 
+<style>
+    .mdc-icon-button .material-icons {
+    color: black;
+}
+    th {
+    color: white !important;
+}
+.mdc-paginator-container {
+     color: white !important;
+}
+</style>
 
 @code {
     ElementReference dropTargetElement;
@@ -106,17 +130,25 @@ else if (status == UploadStatus.Done)
         None, Uploading, Done
     }
 
-    int Album = 0;
+    GAlbum Album = null;
 
-    void Change(string value)
+    public void Changed()
     {
-        Album = int.Parse(value);
+
     }
+
+    GAlbum[] Albums = new GAlbum[0];
 
     List<GFileInfo> FileList { get; } = new List<GFileInfo>();
 
+    protected override async Task OnInitializedAsync()
+    {
+        Albums = DB.Albums.Values.ToArray();
+    }
+
     protected override async Task OnAfterRenderAsync(bool isFirstRender)
     {
+
         if (isFirstRender)
         {
             dropReference = fileReaderService.CreateReference(dropTargetElement);
@@ -177,16 +209,17 @@ else if (status == UploadStatus.Done)
             {
                 MemoryStream Stream = await file.CreateMemoryStreamAsync();
                 string Hash = Program.getMd5Hash(Stream.ToArray());
-                Console.WriteLine($"Hash: " + Hash);
-                if (DB.Images.Values.Where(x => x.file.hash == Hash).Count() == 1)
+                if (DB.HashSet.ContainsKey(Hash))
                 {
                     fileInfo.Status = GFileInfo.FileStatus.Duplicate;
                     maxCount--;
                 }
                 else
                 {
-                    MagickFormat Format = MagickFormat.Jpg;
                     string ID = Program.Gen.CreateId().ToString();
+                    DB.HashSet.Add(Hash, ID);
+                    MagickFormat Format = MagickFormat.Jpg;
+
                     switch (fileInfo.Type)
                     {
                         case "png":
@@ -212,7 +245,7 @@ else if (status == UploadStatus.Done)
 
                         image.Resize(792, 594);
                         image.Write(Config.GlobalPath + "med/" + ID + "." + fileInfo.Type, Format);
-                        image.Resize(320, 200);
+                        image.Resize(320, 320);
                         image.Write(Config.GlobalPath + "thm/" + ID + "." + fileInfo.Type, Format);
                     }
 
@@ -231,7 +264,7 @@ else if (status == UploadStatus.Done)
                             size = fileInfo.Size,
                             type = fileInfo.Type
                         },
-                        album = Album
+                        album = Album.id
                     };
                     DB.Images.Add(ID, img);
                     img.Add();

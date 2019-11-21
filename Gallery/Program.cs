@@ -23,8 +23,9 @@ namespace Gallery
     {
         public static void Main(string[] args)
         {
-            DisableConsoleQuickEdit.Go();
+
 #if DEBUG
+            DisableConsoleQuickEdit.Go();
             Config.DevMode = true;
 #endif
             Config.SetConfig();

@@ -1,6 +1,7 @@
 ﻿@page "/album/{albumid}"
 @using Gallery.Data
 @using Gallery.Database
+@inject AuthenticationStateProvider Authentication
 
 @if (albumid == "0")
 {
@@ -29,7 +30,7 @@ else
         }
         <RadzenDataList WrapItems="true" PageSize="12" AllowPaging="true" Data="@Images" TItem="GImage">
             <Template Context="order">
-                <RadzenCard Style="width:320px; height:200px;">
+                <RadzenCard Style="width:320px; height:320px;">
                     <img src="@order.GetImage(imageType.Thumbnail)" />
                 </RadzenCard>
             </Template>
@@ -38,29 +39,32 @@ else
 }
 
 <style>
-     .card {
-    width: 320px;
-    max-width: 320px;
-    height: 200px;
-    max-height: 200px;
-}
+    .card {
+        width: 320px;
+        max-width: 320px;
+        height: 320px;
+        max-height: 320px;
+    }
 
-img {
-    width: 320px;
-    max-width: 320px;
-    height: 200px;
-    max-height: 200px;
-}
+    img {
+        width: 320px;
+        max-width: 320px;
+        height: 320px;
+        max-height: 320px;
+    }
+
     .ui-g > div {
-    margin: 0.3rem !important;
-}
+        margin: 0.3rem !important;
+    }
+
     .ui-g {
-    margin-left: 20px;
-}
-.card {
-    border: none !important;
-    padding: 0px !important;
-}
+        margin-left: 20px;
+    }
+
+    .card {
+        border: none !important;
+        padding: 0px !important;
+    }
 </style>
 
 @code {
@@ -71,19 +75,39 @@ img {
     public bool Private = false;
     public IEnumerable<GImage> Images = null;
 
-    protected override async Task OnInitializedAsync()
-    {
-       
-    }
-
     protected override async Task OnParametersSetAsync()
     {
-         if (DB.Albums.TryGetValue(int.Parse(albumid), out GAlbum GAlbum))
+        if (!int.TryParse(albumid, out int number))
+        {
+            albumid = "-1";
+            return;
+        }
+        if (DB.Albums.TryGetValue(number, out GAlbum GAlbum))
         {
             if (!GAlbum.isPublic)
             {
-                Private = true;
-                GetAlbum = GAlbum;
+                var Auth = await Authentication.GetAuthenticationStateAsync();
+                if (Auth.User.Identity.IsAuthenticated)
+                {
+                    if (Auth.User.IsInRole("owner"))
+                    {
+                        GetAlbum = GAlbum;
+                        await Task.Run(() =>
+                {
+                    Images = DB.Images.Values.Where(x => x.album == GetAlbum.id & !x.options.isDeleted & !x.options.isHidden);
+                });
+                    }
+                    else
+                    {
+                        Private = true;
+                    GetAlbum = new GAlbum { id = 0, name = "RESTRICTED" };
+                    }
+                }
+                else
+                {
+                    Private = true;
+                    GetAlbum = new GAlbum { id = 0, name = "RESTRICTED" };
+                }
             }
             else
             {
@@ -93,6 +117,10 @@ img {
                     Images = DB.Images.Values.Where(x => x.album == GetAlbum.id & !x.options.isDeleted & !x.options.isHidden);
                 });
             }
+        }
+        else
+        {
+            albumid = "-1";
         }
     }
 }

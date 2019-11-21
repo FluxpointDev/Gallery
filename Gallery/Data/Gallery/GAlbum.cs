@@ -26,6 +26,17 @@ namespace Gallery.Data
             return "";
         }
 
+        public string GetComboxName()
+        {
+            if (name == "Nsfw")
+                return "Nsfw";
+            if (isNsfw)
+                return name + " (Nsfw)";
+            if (!isPublic)
+                return name + " (Private)";
+            return name;
+        }
+
         public void Add()
         {
             if (!Config.DevMode)

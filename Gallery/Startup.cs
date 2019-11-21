@@ -63,6 +63,27 @@ namespace Gallery
                options.ClientId = Config.Tokens["discord.id"];
                options.ClientSecret = Config.Tokens["discord.secret"];
                options.Scope.Add("identify");
+               options.Events.OnRedirectToAuthorizationEndpoint = context =>
+               {
+                   context.Request.QueryString.Add("prompt", "none");
+                   context.HttpContext.Response.Redirect(context.RedirectUri);
+                   return Task.FromResult(0);
+               };
+               options.Events.OnAccessDenied = context =>
+               {
+                   context.Response.Redirect(context.ReturnUrl);
+                   context.SkipHandler();
+                   return Task.FromResult(0);
+               };
+               options.Events.OnRemoteFailure = context =>
+               {
+                   if (context.Failure.Message == "Correlation failed")
+                       context.Response.Redirect(context.Properties.RedirectUri);
+                   else
+                       context.Response.Redirect($"/error");
+                   context.SkipHandler();
+                   return Task.FromResult(0);
+               };
            });
         }
 
