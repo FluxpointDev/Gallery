@@ -9,26 +9,6 @@
 @using Gallery.Database
 @inject AuthenticationStateProvider Authentication
 
-<style>
-    .@dropTargetClass {
-        display:block;
-        padding: 20px;
-        margin-bottom: 10px;
-        border: 1px dashed black;
-        border-radius: 5px;
-    }
-    .@dropTargetDragClass {
-        border-color: orangered;
-        font-weight: bold;
-    }
-    .oi-thumb-up {
-    color: rgb(37,214,37);
-}
-.oi-x {
-    color: rgb(242,62,62);
-}
-</style>
-
 <h3>Album</h3>
 <MatAutocomplete Collection="@Albums" ItemType="GAlbum" ShowClearButton="true" Label="Select an album" CustomStringSelector="@(i => i.GetComboxName())" @bind-Value="@Album">
     <ItemTemplate>
@@ -39,8 +19,6 @@
 </MatAutocomplete>
 <br />
 <br />
-@if (!uploadDisabled)
-{
 <div class="@DropClass"
      @ref=dropTargetElement
      @ondrop=OnDrop
@@ -49,7 +27,7 @@
     Drop Files here.
 </div>
 <br />
-}
+
 @if (status == UploadStatus.Uploading)
 {
     <h3 class="mat-subtitle1">Uploading - @uploadCount/@maxCount</h3>
@@ -95,10 +73,27 @@ else if (status == UploadStatus.Done)
 }
 @if (Album != null)
 {
-<button @onclick="ReadFile" disabled="@uploadDisabled" ShowClearButton="true" class="btn btn-primary">Upload images</button>
+<button @onclick="ReadFile" disabled="@uploadDisabled" class="btn btn-primary">Upload images</button>
 }
 
 <style>
+     .@dropTargetClass {
+        display:block;
+        padding: 20px;
+        margin-bottom: 10px;
+        border: 1px dashed black;
+        border-radius: 5px;
+    }
+    .@dropTargetDragClass {
+        border-color: orangered;
+        font-weight: bold;
+    }
+    .oi-thumb-up {
+    color: rgb(37,214,37);
+}
+.oi-x {
+    color: rgb(242,62,62);
+}
     .mdc-icon-button .material-icons {
     color: black;
 }
@@ -148,7 +143,6 @@ else if (status == UploadStatus.Done)
 
     protected override async Task OnAfterRenderAsync(bool isFirstRender)
     {
-
         if (isFirstRender)
         {
             dropReference = fileReaderService.CreateReference(dropTargetElement);

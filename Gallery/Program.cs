@@ -21,6 +21,8 @@ namespace Gallery
 {
     public class Program
     {
+        public static Random rng = new Random(Convert.ToInt32(DateTime.Now.Ticks & 0x000000007FFFFFFF));
+
         public static void Main(string[] args)
         {
 

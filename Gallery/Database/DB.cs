@@ -20,6 +20,7 @@ namespace Gallery.Database
         public static Dictionary<string, GImage> Images = new Dictionary<string, GImage>();
         public static Dictionary<string, string> HashSet = new Dictionary<string, string>();
         public static Dictionary<int, GTag> Tags = new Dictionary<int, GTag>();
+        public static Dictionary<string, string> Keys = new Dictionary<string, string>();
 
         public static Task Start()
         {
@@ -40,10 +41,16 @@ namespace Gallery.Database
 
             Cursor<GImage> images = R.Db("Gallery").Table("Images").RunCursor<GImage>(Con);
             Images = images.ToDictionary(x => x.id, x => x);
-            HashSet = images.ToDictionary(x => x.file.hash, x => x.id);
+            HashSet = Images.Values.ToDictionary(x => x.file.hash, x => x.id);
 
             Cursor<GTag> tags = R.Db("Gallery").Table("Tags").RunCursor<GTag>(Con);
             Tags = tags.ToDictionary(x => x.id, x => x);
+
+            Cursor<ApiUser> keys = R.Db("API").Table("Users").RunCursor<ApiUser>(Con);
+            Keys = keys.ToDictionary(x => x.Token, x => "");
+
+            UserFeeds.Setup();
+
 
             Connected = true;
             return Task.CompletedTask;

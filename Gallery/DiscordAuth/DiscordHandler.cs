@@ -51,12 +51,21 @@ namespace Discord.OAuth2
                 identity.AddClaim(new Claim(ClaimTypes.Role, "donator"));
             else
                 identity.AddClaim(new Claim(ClaimTypes.Role, "user"));
-           
-            if (!DB.GalleryUsers.ContainsKey(User.id))
+
+            if (DB.GalleryUsers.TryGetValue(User.id, out GUser user))
+            {
+                if (user.name != $"{User.username}#{User.discriminator}")
+                {
+                    user.name = $"{User.username}#{User.discriminator}";
+                    user.Update();
+                }
+            }
+            else
             {
                 GUser GUser = new GUser
                 {
-                    id = User.id
+                    id = User.id,
+                    name = $"{User.username}#{User.discriminator}"
                 };
                 if (DBUser.Donator)
                     GUser.upload.imageLimit = 50;

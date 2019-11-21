@@ -1,0 +1,191 @@
+﻿@page "/admin/images"
+@using MatBlazor
+@using Gallery.Data
+@using Gallery.Database
+@attribute [Authorize(Roles = "owner, admin")]
+@inject AuthenticationStateProvider Authentication
+
+<h3>Image Management</h3>
+<MatTextField @bind-Value="@id" Label="ID"></MatTextField>
+<MatTextField @bind-Value="@author" Label="Discord ID"></MatTextField>
+<MatTextField @bind-Value="@name" Label="Image Name"></MatTextField>
+<MatTextField @bind-Value="@hash" Label="Image Hash"></MatTextField>
+<br />
+<br />
+<MatSlideToggle @bind-Checked="@allowApi" Label="Allow API"></MatSlideToggle>
+<MatSlideToggle @bind-Checked="@hidden" Label="Hidden"></MatSlideToggle>
+<MatSlideToggle @bind-Checked="@deleted" Label="Deleted"></MatSlideToggle>
+<br />
+<br />
+<MatAutocomplete Collection="@Albums" ItemType="GAlbum" ShowClearButton="true" Label="Select an album" CustomStringSelector="@(i => i.GetComboxName())" @bind-Value="@Album">
+    <ItemTemplate>
+        <div style="display: flex; flex-direction: row; width: 100%;">
+            <div style="flex: 1;">@context.GetComboxName()</div>
+        </div>
+    </ItemTemplate>
+</MatAutocomplete>
+<MatAutocomplete Collection="@Tags" ItemType="GTag" ShowClearButton="true" Label="Select a tag" CustomStringSelector="@(i => i.name)" @bind-Value="@Tag">
+    <ItemTemplate>
+        <div style="display: flex; flex-direction: row; width: 100%;">
+            <div style="flex: 1;">@context.name</div>
+        </div>
+    </ItemTemplate>
+</MatAutocomplete>
+<MatSelect Label="Content" @bind-Value="@Content">
+    <MatOption Value="All">All</MatOption>
+    <MatOption Value="Sfw">Sfw</MatOption>
+    <MatOption Value="Nsfw">Nsfw</MatOption>
+</MatSelect>
+<br />
+<br />
+<MatButton Unelevated="true" OnClick="@Click">Refresh</MatButton>
+<br />
+<MatTable Items="@ImagesList">
+    <MatTableHeader>
+        <th></th>
+        <th>Image ID</th>
+        <th>Image Name</th>
+        <th>Author</th>
+    </MatTableHeader>
+    <MatTableRow>
+        <td><MatButton Unelevated="true">Edit</MatButton></td>
+        <td>@context.id</td>
+        <td>@context.name</td>
+        @if (context.author == "")
+        {
+            <td>N/A</td>
+        }
+        else if (DB.GalleryUsers.TryGetValue(context.author, out GUser user))
+        {
+            <td>@user.name (@context.author)</td>
+        }
+        else
+        {
+    <td>N/A (@context.author)</td>
+        }
+    </MatTableRow>
+</MatTable>
+
+<style>
+    .mdc-icon-button .material-icons {
+        color: black;
+    }
+
+    .mdc-icon-button .material-icons {
+        color: black;
+    }
+
+    th {
+        color: white !important;
+    }
+
+    .mdc-paginator-container {
+        color: white !important;
+    }
+</style>
+
+@code {
+    string id = "";
+    string author = "";
+    string hash = "";
+    string name = "";
+
+    bool allowApi = true;
+    bool hidden = false;
+    bool deleted = false;
+
+    public string Content = "All";
+
+    GAlbum Album = null;
+    GTag Tag = null;
+    GAlbum[] Albums = new GAlbum[0];
+    GTag[] Tags = new GTag[0];
+    GImage[] ImagesList = new GImage[0];
+    AuthenticationState AuthUser = null;
+    protected override async Task OnInitializedAsync()
+    {
+        AuthUser = await Authentication.GetAuthenticationStateAsync();
+        Albums = DB.Albums.Values.ToArray();
+        Tags = DB.Tags.Values.ToArray();
+    }
+
+    void Click(MouseEventArgs e)
+    {
+        ImagesList = new GImage[0];
+        StateHasChanged();
+        List<GImage> List = new List<GImage>();
+        foreach (GImage i in DB.Images.Values)
+        {
+            DB.Albums.TryGetValue(i.album, out GAlbum album);
+
+            if (album != null && Album != null && Album.id != album.id)
+                continue;
+
+            if (AuthUser.User.GetId() != Config.OwnerID.ToString() && album != null && !album.isPublic && AuthUser.User.GetId() != album.owner)
+                continue;
+
+            if (id != "" && id != i.id)
+                continue;
+
+            if (author != "" && i.author != author)
+                continue;
+
+            if (hash != "" && i.file.hash != hash)
+                continue;
+
+            if (name != "" && name.ToLower() != i.name.ToLower())
+                continue;
+
+            if (allowApi)
+            {
+                if (!i.options.allowApi)
+                    continue;
+            }
+            else
+            {
+                if (i.options.allowApi)
+                    continue;
+            }
+
+            if (hidden)
+            {
+                if (!i.options.isHidden)
+                    continue;
+            }
+            else
+            {
+                if (i.options.isHidden)
+                    continue;
+            }
+
+            if (deleted)
+            {
+                if (!i.options.isDeleted)
+                    continue;
+            }
+            else
+            {
+                if (i.options.isDeleted)
+                    continue;
+            }
+
+            if (Album != null)
+            {
+                switch (Content)
+                {
+                    case "Sfw":
+                        if (Album.isNsfw)
+                            continue;
+                        break;
+                    case "Nsfw":
+                        if (!Album.isNsfw)
+                            continue;
+                        break;
+                }
+            }
+            List.Add(i);
+        }
+        ImagesList = List.ToArray();
+        StateHasChanged();
+    }
+}

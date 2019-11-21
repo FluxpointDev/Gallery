@@ -3,6 +3,7 @@
 @using ImageMagick
 @using Gallery.Data
 @using System.IO
+@using MatBlazor
 @attribute [Authorize(Roles = "owner, admin")]
 
 <title>Admin</title>
@@ -13,11 +14,36 @@
 <h5>Tags: @DB.Tags.Count</h5>
 <AuthorizeView Roles="owner">
     <button @onclick="TestClick">Regen thumbnails</button>
+    <MatTextField @bind-Value="@Image" Label="Standard"></MatTextField>
+    <button @onclick="DeleteImage">Delete image</button>
+
 </AuthorizeView>
 
 
 
 @code {
+    public string Image = "";
+
+    void DeleteImage()
+    {
+        if (DB.Images.TryGetValue(Image, out GImage Img))
+        {
+            DB.R.Db("Gallery").Table("Images").Get(Img.id).Delete().RunNoReply(DB.Con);
+
+            if (File.Exists(Img.GetFile(imageType.Full)))
+                File.Delete(Img.GetFile(imageType.Full));
+
+            if (File.Exists(Img.GetFile(imageType.Medium)))
+                File.Delete(Img.GetFile(imageType.Medium));
+
+            if (File.Exists(Img.GetFile(imageType.Thumbnail)))
+                File.Delete(Img.GetFile(imageType.Thumbnail));
+
+            //DB.HashSet.Remove(Img.file.hash);
+            DB.Images.Remove(Image);
+        }
+    }
+
     void TestClick()
     {
         foreach(GImage i in DB.Images.Values)

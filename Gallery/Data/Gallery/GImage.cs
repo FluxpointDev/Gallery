@@ -33,8 +33,9 @@ namespace Gallery.Data
         {
             public bool isHidden = false;
             public bool isDeleted = false;
-            public bool allowDiscord = true;
+            public bool allowApi = true;
         }
+
         public string GetImage(imageType type)
         {
             switch (type)

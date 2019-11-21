@@ -9,6 +9,7 @@ namespace Gallery.Data
     public class GUser
     {
         public string id;
+        public string name;
         public List<int> roles = new List<int>();
         public UploadSet upload = new UploadSet();
         public class UploadSet
