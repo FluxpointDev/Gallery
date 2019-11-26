@@ -29,14 +29,14 @@ namespace Gallery.Database
         private static async Task OnNext(Change<ApiUser> m)
         {
             if (m.OldValue == null && m.NewValue != null)
-                DB.Keys.Add(m.NewValue.Token, "");
+                DB.Keys.Add(m.NewValue.Token, m.NewValue);
             else if (m.OldValue != null && m.NewValue != null)
             {
                 if (m.OldValue.Token == m.NewValue.Token)
-                    DB.Keys[m.NewValue.Token] = "";
+                    DB.Keys[m.NewValue.Token] = m.NewValue;
                 else
                 {
-                    DB.Keys.Add(m.NewValue.Token, "");
+                    DB.Keys.Add(m.NewValue.Token, m.NewValue);
                     try
                     {
                         DB.Keys.Remove(m.OldValue.Token);

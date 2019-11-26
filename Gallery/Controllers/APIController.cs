@@ -10,43 +10,107 @@ using Microsoft.Extensions.Primitives;
 
 namespace Gallery.Controllers
 {
-    public class ApiError
-    {
-        public string message = "";
-    }
-
     public class ApiImage
     {
         public string file = "";
     }
 
-    [Route("api/[controller]")]
-    public class APIController : Controller
+    [Route("/api/[controller]"), ApiController, IsAuthenticated]
+    public class APIController : MyController
     {
+        [HttpGet("/api")]
+        public ActionResult Index()
+        {
+
+            if (!Request.Headers.ContainsKey("Authorization") || !DB.Keys.TryGetValue(Request.Headers["Authorization"][0], out ApiUser User))
+                return Ok(new HomeResponse("Hello user"));
+            else
+                return Ok(new HomeResponse($"Hello {User.Name} - {User.ID}"));
+        }
+
+        [HttpGet("/api/list")]
+        public IActionResult ListAlbums()
+        {
+            return Ok();
+        }
+
         // GET api/<controller>/5
         [HttpGet("/api/album/{id}")]
-        public ContentResult GetAlbum(int id)
+        public IActionResult GetAlbum(int id)
         {
-            if (!HttpContext.Request.Headers.TryGetValue("Authorization", out StringValues Auth) || Auth[0] == "")
-            {
-                return Content(Newtonsoft.Json.JsonConvert.SerializeObject(new ApiError { message = "No auth header" }, Newtonsoft.Json.Formatting.Indented));
-            }
-            if (!DB.Keys.TryGetValue(Auth[0], out string st))
-            {
-                return Content(Newtonsoft.Json.JsonConvert.SerializeObject(new ApiError { message = "Your api token is invalid" }, Newtonsoft.Json.Formatting.Indented));
-            }
-
             if (!DB.Albums.TryGetValue(id, out GAlbum album))
-                return Content(Newtonsoft.Json.JsonConvert.SerializeObject(new ApiError { message = "Unknown album" }, Newtonsoft.Json.Formatting.Indented));
-            
+                return BadRequest("Unknown album");
+
             if (!album.isPublic)
-                return Content(Newtonsoft.Json.JsonConvert.SerializeObject(new ApiError { message = "This album is private" }, Newtonsoft.Json.Formatting.Indented));
+                return BadRequest("This album is private");
 
+            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == id);
+            int ID = Program.rng.Next(0, List.Count() - 1);
+            string File = List.ElementAt(ID).GetImage(imageType.Full);
+            return Ok(new ApiImage { file = File });
+        }
 
-            string File = "";
-            int ID = Program.rng.Next(0, DB.Images.Values.Count(x => x.album == id));
-            File = DB.Images.Values.Where(x => x.album == id).ElementAt(ID).GetImage(imageType.Full);
-            return Content(Newtonsoft.Json.JsonConvert.SerializeObject(new ApiImage { file = File }, Newtonsoft.Json.Formatting.Indented));
+        [HttpGet("/api/sfw/anime")]
+        public IActionResult GetSfwAnime()
+        {
+            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 5);
+            int ID = Program.rng.Next(0, List.Count() - 1);
+            string File = List.ElementAt(ID).GetImage(imageType.Full);
+            return Ok(new ApiImage { file = File });
+        }
+
+        [HttpGet("/api/sfw/wallpaper")]
+        public IActionResult GetSfwWallpaper()
+        {
+            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 6);
+            int ID = Program.rng.Next(0, List.Count() - 1);
+            string File = List.ElementAt(ID).GetImage(imageType.Full);
+            return Ok(new ApiImage { file = File });
+        }
+
+        [HttpGet("/api/sfw/azurlane")]
+        public IActionResult GetSfwAzurlane()
+        {
+            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 7);
+            int ID = Program.rng.Next(0, List.Count() - 1);
+            string File = List.ElementAt(ID).GetImage(imageType.Full);
+            return Ok(new ApiImage { file = File });
+        }
+
+        [HttpGet("/api/sfw/nekopara")]
+        public IActionResult GetSfwNekopara()
+        {
+            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 8);
+            int ID = Program.rng.Next(0, List.Count() - 1);
+            string File = List.ElementAt(ID).GetImage(imageType.Full);
+            return Ok(new ApiImage { file = File });
+        }
+
+        [HttpGet("/api/nsfw/azurlane")]
+        public IActionResult GetNsfwAzurlane()
+        {
+            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 11);
+            int ID = Program.rng.Next(0, List.Count() - 1);
+            string File = List.ElementAt(ID).GetImage(imageType.Full);
+            return Ok(new ApiImage { file = File });
+        }
+
+        [HttpGet("/api/nsfw/nekopara")]
+        public IActionResult GetNsfwNekopara()
+        {
+            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 10);
+            int ID = Program.rng.Next(0, List.Count() - 1);
+            string File = List.ElementAt(ID).GetImage(imageType.Full);
+            return Ok(new ApiImage { file = File });
+        }
+
+        [HttpGet("/api/nsfw/lewd")]
+        public IActionResult GetNsfwLewd()
+        {
+            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 12);
+            int ID = Program.rng.Next(0, List.Count() - 1);
+            string File = List.ElementAt(ID).GetImage(imageType.Full);
+            return Ok(new ApiImage { file = File });
         }
     }
 }
