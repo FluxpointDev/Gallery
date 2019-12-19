@@ -52,7 +52,6 @@ else
                             </ContextMenuTrigger>
                         </a>
                         <ContextMenu Id="@("menu-" + order.id)">
-                            <h1>Test</h1>
                             <a id="image-view" href="@order.GetImage(imageType.Full)" target="_blank"><Item>View Image</Item></a>
                             <a id="image-download" @onclick="@(() => DownloadImage(order.GetImage(imageType.Download)))"><Item>Download Image</Item></a>
                             <a id="image-path" @onclick="@((mouse) => SaveText(order.GetImage(imageType.Full)))"><Item>Copy Image Location</Item></a>
