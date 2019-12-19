@@ -1,7 +1,10 @@
 ﻿@page "/album/{albumid}"
 @using Gallery.Data
 @using Gallery.Database
+@using BlazorContextMenu
 @inject AuthenticationStateProvider Authentication
+@inject IJSRuntime JSRuntime
+@inject IModalService Modal
 
 @if (albumid == "0")
 {
@@ -23,18 +26,41 @@ else
     }
     else
     {
-        <h1>@GetAlbum.name</h1>
+        @if (GetAlbum.isNsfw)
+        {
+            <h1>@GetAlbum.name (Nsfw)</h1>
+        }
+        else
+        {
+            <h1>@GetAlbum.name</h1>
+        }
+
         if (Images.Count() == 0)
         {
             <p>This album has no images :(</p>
         }
-        <RadzenDataList WrapItems="true" PageSize="12" AllowPaging="true" Data="@Images" TItem="GImage">
-            <Template Context="order">
-                <RadzenCard Style="width:320px; height:320px;">
-                    <img src="@order.GetImage(imageType.Thumbnail)" />
-                </RadzenCard>
-            </Template>
-        </RadzenDataList>
+        else
+        {
+            <iframe id="dliframe" style="display:none"></iframe>
+            <RadzenDataList EmptyText="This album has no images :(" WrapItems="true" PageSize="12" AllowPaging="true" Data="@Images" TItem="GImage">
+                <Template Context="order">
+                    <RadzenCard Id="@("card-" + order.id)" Style="width:320px; height:320px;">
+
+                        <a Id="@("link-" + order.id)" href="@("/album/" + albumid)" @onclick="@(() => ShowImage(order.id))">
+                            <ContextMenuTrigger Id="@("trigger-" + order.id)" MenuId="@("menu-" + order.id)">
+                                <img id="@("img-" + order.id)" class="album-image" src="@order.GetImage(imageType.Thumbnail)" />
+                            </ContextMenuTrigger>
+                        </a>
+                        <ContextMenu Id="@("menu-" + order.id)">
+                            <h1>Test</h1>
+                            <a id="image-view" href="@order.GetImage(imageType.Full)" target="_blank"><Item>View Image</Item></a>
+                            <a id="image-download" @onclick="@(() => DownloadImage(order.GetImage(imageType.Download)))"><Item>Download Image</Item></a>
+                            <a id="image-path" @onclick="@((mouse) => SaveText(order.GetImage(imageType.Full)))"><Item>Copy Image Location</Item></a>
+                        </ContextMenu>
+                    </RadzenCard>
+                </Template>
+            </RadzenDataList>
+        }
     }
 }
 
@@ -46,11 +72,23 @@ else
         max-height: 320px;
     }
 
-    img {
+    .album-image {
         width: 320px;
         max-width: 320px;
         height: 320px;
         max-height: 320px;
+    }
+
+    .blazored-modal {
+        padding: 0px !important;
+        border-color: #0b2263;
+    }
+
+    .blazor-context-menu {
+        border-radius: 5px;
+        box-shadow: none;
+        border: 1px solid #616161;
+        background-color: #404448;
     }
 
     .ui-g > div {
@@ -65,6 +103,35 @@ else
         border: none !important;
         padding: 0px !important;
     }
+
+    /* Dark theme context menu */
+    .blazor-context-menu {
+        color: #5ca6f8 !important;
+        z-index: 10;
+    }
+
+        .blazor-context-menu li:hover {
+            text-decoration: underline;
+        }
+
+        .blazor-context-menu a {
+            text-decoration: none;
+            color: #5ca6f8 !important;
+        }
+
+        /* Dark theme paginator controls */
+        .ui-paginator {
+    border: none;
+    background-color: #383232 !important;
+    margin-top: 5px;
+      margin-bottom: 15px;
+}
+.ui-paginator-page.ui-state-active {
+     color: rgb(5,65,194);
+}
+.ui-paginator-page:hover {
+    color: black;
+}
 </style>
 
 @code {
@@ -75,6 +142,25 @@ else
     public bool Private = false;
     public IEnumerable<GImage> Images = null;
 
+
+    void ShowImage(string imageid)
+    {
+        var parameters = new ModalParameters();
+        parameters.Add("ImageId", imageid);
+
+        Modal.Show<ImagePopup>("View Image", parameters, new ModalOptions
+        {
+            HideHeader = true
+        });
+
+    }
+
+void ClickRow()
+{
+Console.WriteLine("Toggle");
+}
+
+
     protected override async Task OnParametersSetAsync()
     {
         if (!int.TryParse(albumid, out int number))
@@ -84,6 +170,7 @@ else
         }
         if (DB.Albums.TryGetValue(number, out GAlbum GAlbum))
         {
+            Console.WriteLine("PARAM");
             if (!GAlbum.isPublic)
             {
                 var Auth = await Authentication.GetAuthenticationStateAsync();
@@ -93,14 +180,15 @@ else
                     {
                         GetAlbum = GAlbum;
                         await Task.Run(() =>
-                {
-                    Images = DB.Images.Values.Where(x => x.album == GetAlbum.id & !x.options.isDeleted & !x.options.isHidden);
-                });
+                        {
+                            Images = DB.Images.Values.Where(x => x.album == GetAlbum.id & !x.options.isDeleted & !x.options.isHidden);
+
+                        });
                     }
                     else
                     {
                         Private = true;
-                    GetAlbum = new GAlbum { id = 0, name = "RESTRICTED" };
+                        GetAlbum = new GAlbum { id = 0, name = "RESTRICTED" };
                     }
                 }
                 else
@@ -115,6 +203,7 @@ else
                 await Task.Run(() =>
                 {
                     Images = DB.Images.Values.Where(x => x.album == GetAlbum.id & !x.options.isDeleted & !x.options.isHidden);
+
                 });
             }
         }
@@ -122,5 +211,22 @@ else
         {
             albumid = "-1";
         }
+    }
+
+    public async Task SaveText(string text)
+    {
+        try
+        {
+            await JSRuntime.InvokeAsync<object>("writeToClipboardOnPermission", text);
+        }
+        catch (Exception ex)
+        {
+
+        }
+    }
+
+    public async Task DownloadImage(string url)
+    {
+        await JSRuntime.InvokeAsync<object>("downloadURI", url);
     }
 }

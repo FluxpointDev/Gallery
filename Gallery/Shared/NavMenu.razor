@@ -27,29 +27,68 @@
                             IEnumerable<GAlbum> subs = DB.Albums.Values.Where(x => x.subAlbum == a.id);
                             if (subs.Count() == 0)
                             {
-                        <div @onclick="(() => GoToPage(a.id))"><MatNavItem Href="@("/album/" + a.id.ToString() + "?")">• @a.name</MatNavItem></div>
+                                <div @onclick="(() => GoToPage(a.id))"><MatNavItem Href="@("/album/" + a.id.ToString() + "?")">• @a.name</MatNavItem></div>
                             }
                             else
                             {
-                        <MatNavSubMenu Class="navmenu-sub">
-                            <MatNavSubMenuHeader>
-                                <MatNavItem AllowSelection="false">@a.name</MatNavItem>
-                            </MatNavSubMenuHeader>
-                            <MatNavSubMenuList>
-                                <a @onclick="(() => GoToPage(a.id))"><MatNavItem Id="navitem">• @a.name</MatNavItem></a>
-                                @foreach (GAlbum sa in subs)
+                                <MatNavSubMenu Class="navmenu-sub">
+                                    <MatNavSubMenuHeader>
+                                        <MatNavItem AllowSelection="false">@a.name</MatNavItem>
+                                    </MatNavSubMenuHeader>
+                                    <MatNavSubMenuList>
+                                        <a @onclick="(() => GoToPage(a.id))"><MatNavItem Id="navitem">• @a.name</MatNavItem></a>
+                                        @foreach (GAlbum sa in subs)
                                         {
-                            <a @onclick="(() => GoToPage(sa.id))"><MatNavItem Id="navitem">• @sa.name</MatNavItem></a>
+                                            <a @onclick="(() => GoToPage(sa.id))"><MatNavItem Id="navitem">• @sa.name</MatNavItem></a>
                                         }
-                            </MatNavSubMenuList>
-                        </MatNavSubMenu>
+                                    </MatNavSubMenuList>
+                                </MatNavSubMenu>
                             }
                         }
                     </MatNavSubMenuList>
                 </MatNavSubMenu>
             </MatNavMenu>
+
         </li>
     </ul>
+
+    @if (Session.LoggedIn)
+    {
+<div class="usermenu">
+    <RadzenImage Path="@Session.State.User.GetAvatarUrl(128)"></RadzenImage>
+    @Session.State.User.GetUser().username
+    <br />
+    <MatTooltip Tooltip="Favourites" Wrap="true" Position="MatTooltipPosition.Top">
+        <MatButton Class="menuicon menuicon-fav" Icon="favorite"></MatButton>
+    </MatTooltip>
+    <MatTooltip Tooltip="Settings" Wrap="true" Position="MatTooltipPosition.Top">
+        <MatButton Class="menuicon menuicon-set" Icon="settings"></MatButton>
+    </MatTooltip>
+    <MatTooltip Tooltip="Logout" Wrap="true" Position="MatTooltipPosition.Top">
+        <a href="/logout"><MatButton Class="menuicon menuicon-logout" Icon="exit_to_app"></MatButton></a>
+    </MatTooltip>
+</div>
+    }
+    else
+    {
+<div class="usermenu">
+    <RadzenImage Path="https://cdn.discordapp.com/embed/avatars/2.png"></RadzenImage>
+    Guest
+    <br />
+    <MatTooltip Tooltip="Favourites" Wrap="true" Position="MatTooltipPosition.Top">
+        <MatButton Class="menuicon menuicon-fav" Icon="favorite"></MatButton>
+    </MatTooltip>
+    <MatTooltip Tooltip="Settings" Wrap="true" Position="MatTooltipPosition.Top">
+        <MatButton Class="menuicon menuicon-set" Icon="settings"></MatButton>
+    </MatTooltip>
+    <form action="/login" method="post">
+        <MatTooltip Tooltip="Login" Wrap="true" Position="MatTooltipPosition.Top">
+            <MatButton Class="menuicon menuicon-login" Icon="vpn_key"></MatButton>
+        </MatTooltip>
+    </form>
+</div>
+    }
+
 </div>
 
 <style>
@@ -89,12 +128,54 @@
     .mat-expansion-panel--expanded:not(:first-child) .mdc-nav-item:before {
         content: '˅  ' !important;
     }
+
+    /* User menu css */
+    .usermenu {
+    color: white;
+}
+.menuicon-fav {
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-left: 15px;
+ color: rgb(242,47,167) !important;   
+}
+.menuicon-set {
+    color: rgb(110,110,229) !important; 
+}
+.menuicon-login {
+    color: rgb(35,196,35) !important; 
+}
+.menuicon-logout {
+    color: rgb(221,51,51) !important; 
+}
+.usermenu img {
+    max-width: 64px;
+    max-height: 64px;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+html {
+    background-color: #15202b;
+}
+
+.mat-tooltip {
+    margin-top: 10px;
+    background-color: #282828;
+}
+
+form {
+    display: inline;
+}
+
 </style>
 
 @code {
     bool collapseNavMenu = true;
     bool albumMenuOpened = true;
     string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    [CascadingParameter]
+    private Session Session { get; set; }
 
     void GoToPage(int path)
     {

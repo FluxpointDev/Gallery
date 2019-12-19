@@ -6,26 +6,25 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Primitives;
 
 namespace Gallery.Controllers
 {
     public class AuthenticationController : Controller
     {
         [HttpPost("~/login")]
-        public async Task<IActionResult> SignIn([FromForm] string provider)
+        public async Task<IActionResult> SignIn()
         {
-            if (string.IsNullOrWhiteSpace(provider))
+            if (string.IsNullOrWhiteSpace("Discord"))
             {
                 return BadRequest();
             }
-            if (!await HttpContext.IsProviderSupportedAsync(provider))
+            if (!await HttpContext.IsProviderSupportedAsync("Discord"))
             {
                 return BadRequest();
             }
             AuthenticationProperties Auth = new AuthenticationProperties { RedirectUri = "/" };
 
-            return Challenge(Auth, provider);
+            return Challenge(Auth, "Discord");
         }
 
         [HttpGet("~/logout"), HttpPost("~/logout")]

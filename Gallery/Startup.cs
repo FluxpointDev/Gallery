@@ -1,21 +1,21 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Gallery.Data;
-using System.Drawing;
 using Blazor.FileReader;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
 using Gallery.Database;
 using EmbeddedBlazorContent;
 using Microsoft.AspNetCore.ResponseCompression;
+using BlazorContextMenu;
+using Blazored.Modal;
+using Microsoft.AspNetCore.Components;
 
 namespace Gallery
 {
@@ -33,7 +33,7 @@ namespace Gallery
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRazorPages();
-            services.AddFileReaderService(options => options.InitializeOnFirstCall = true);
+            
             services.AddResponseCompression(opts =>
             {
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
@@ -41,10 +41,15 @@ namespace Gallery
             });
             services.AddSingleton<RethinkUpdaterService>();
             services.AddSingleton<System.Net.Http.HttpClient>();
-            services.AddServerSideBlazor().AddHubOptions(o =>
+            services.AddServerSideBlazor(configure =>
+            {
+                configure.DetailedErrors = true;
+            }).AddHubOptions(o =>
             {
                 o.MaximumReceiveMessageSize = 10 * 1024 * 1024; // 10MB
             });
+            services.AddFileReaderService(options => options.InitializeOnFirstCall = true);
+            services.AddBlazoredModal();
             services.AddAuthentication(options =>
             {
                 options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -85,6 +90,17 @@ namespace Gallery
                    return Task.FromResult(0);
                };
            });
+            services.AddBlazorContextMenu(options =>
+            {
+                options.ConfigureTemplate("dark", template =>
+                {
+                    template.MenuCssClass = "dark-menu";
+                    template.MenuItemCssClass = "dark-menu-item";
+                    template.MenuItemDisabledCssClass = "dark-menu-item--disabled";
+                    template.MenuItemWithSubMenuCssClass = "dark-menu-item--with-submenu";
+                    template.Animation = Animation.FadeIn;
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -112,8 +128,9 @@ namespace Gallery
             app.UseEmbeddedBlazorContent(typeof(MatBlazor.BaseMatComponent).Assembly);
             app.UseStaticFiles();
             app.UseAuthentication();
-            app.UseAuthorization();
+            
             app.UseRouting();
+app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapBlazorHub();

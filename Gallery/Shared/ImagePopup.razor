@@ -1,0 +1,48 @@
+﻿@inject IModalService ModalService
+@inject IJSRuntime JSRuntime
+
+@using Data
+<div class="simple-form">
+    <div class="container">
+        @if (Image == null)
+        {
+            <h3>Could not load image</h3>
+        }
+        else
+        {
+            <img src="@Image.GetImage(imageType.Full)" />
+        }
+    </div>
+</div>
+
+<style>
+    .container {
+    padding: 0px;
+}
+.container img {
+    height: 500px !important;
+    max-height: 500px !important;
+    max-width: 100%;
+}
+</style>
+
+@code {
+
+    [CascadingParameter] ModalParameters Parameters { get; set; }
+
+    string ImageId { get; set; }
+    GImage Image { get; set; } = null;
+
+    protected override void OnInitialized()
+    {
+        ImageId = Parameters.Get<string>("ImageId");
+        if (Database.DB.Images.TryGetValue(ImageId, out GImage GetImage))
+            Image = GetImage;
+    }
+
+    void Cancel()
+    {
+        ModalService.Cancel();
+    }
+
+}

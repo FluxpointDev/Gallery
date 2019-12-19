@@ -12,18 +12,14 @@
     <NotAuthorized>
         <h1>Hello random user</h1>
         0_o
-        <form action="/login" method="post">
-            <input type="hidden" name="Provider" value="Discord" />
-            <button ButtonType="ButtonType.Submit">Login</button>
-        </form>
-
     </NotAuthorized>
 </AuthorizeView>
 
 <div class="mat-layout-grid">
     <div class="mat-layout-grid-inner">
-
-        @foreach (GAlbum a in DB.Albums.Values.Where(x => !x.isNsfw))
+        @if (Albums != null)
+        {
+        @foreach (GAlbum a in Albums)
         {
         <div class="mat-layout-grid-cell">
             <MatCard class="demo-mat-card">
@@ -34,7 +30,15 @@
                             
                                 <div class="demo-mat-card-content">
                                     <MatHeadline6 class="demo-mat-card-clean-margin">
-                                        @a.name
+                                        @if (a.isNsfw)
+                                        {
+                                            @(@a.name + " (Nsfw)")
+                                        }
+                                        else
+                                        {
+                                            @a.name
+                                        }
+
                                     </MatHeadline6>
                                 </div>
                         </MatCardContent>
@@ -43,12 +47,15 @@
             </MatCard>
         </div>
         }
+        }
     </div>
 </div>
 
 <style>
     .demo-mat-card {
         max-width: 320px;
+         text-align: center;
+    background-color: #343a40;
     }
 
     .demo-mat-card-content {
@@ -59,3 +66,18 @@
         margin: 0px;
     }
 </style>
+
+@code {
+    List<GAlbum> Albums = null;
+
+    [CascadingParameter]
+    private Session Session { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (Session.Nsfw)
+            Albums = DB.Albums.Values.Where(x => x.id != 9).ToList();
+        else
+            Albums = DB.Albums.Values.Where(x => !x.isNsfw && x.id != 9).ToList();
+    }
+}

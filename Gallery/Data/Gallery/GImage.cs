@@ -1,8 +1,6 @@
 ﻿using Gallery.Database;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Gallery.Data
 {
@@ -45,7 +43,9 @@ namespace Gallery.Data
                 case imageType.Medium:
                     return "https://img.fluxpoint.dev/med/" + id + "." + file.type;
                 case imageType.Thumbnail:
-                    return "https://img.fluxpoint.dev/thm/" + id + "." + file.type; 
+                    return "https://img.fluxpoint.dev/thm/" + id + "." + file.type;
+                case imageType.Download:
+                    return "https://img.fluxpoint.dev/dl/" + id + "." + file.type;
             }
             return "";
         }
@@ -77,6 +77,6 @@ namespace Gallery.Data
     }
     public enum imageType
     {
-        Full, Medium, Thumbnail
+        Full, Medium, Thumbnail, Download
     }
 }

@@ -1,0 +1,34 @@
+﻿@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+@if (Loaded)
+{
+    <CascadingValue Value="@this">
+        @ChildContent
+    </CascadingValue>
+}
+else
+{
+    <h1>Loading</h1>
+}
+
+@code {
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    private bool Loaded = false;
+    public bool LoggedIn = false;
+    public bool Nsfw = false;
+
+    public AuthenticationState State = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        State = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        LoggedIn = State.User.Identity.IsAuthenticated;
+        if (Navigation.Uri.ToString().EndsWith("?nsfw"))
+            Nsfw = true;
+        Loaded = true;
+    }
+}

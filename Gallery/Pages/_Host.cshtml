@@ -12,13 +12,19 @@
     <base href="~/" />
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
     <link rel="stylesheet" href="_content/Radzen.Blazor/css/default.css">
+    <link href="_content/Blazor.ContextMenu/blazorContextMenu.min.css" rel="stylesheet" />
     <link href="css/site.css" rel="stylesheet" />
+    <link href="_content/Blazored.Modal/blazored-modal.css" rel="stylesheet" />
+
     @Html.EmbeddedBlazorContent()
 </head>
 <body>
     <app>
         @(await Html.RenderComponentAsync<App>(RenderMode.Server))
     </app>
+    <script src="_content/Blazor.ContextMenu/blazorContextMenu.min.js"></script>
+    <script src="~/javascript/clipboard.js"></script>
+    <script src="~/javascript/download.js"></script>
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
     <script src="_framework/blazor.server.js"></script>
 </body>

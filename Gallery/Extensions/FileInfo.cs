@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Blazor.FileReader;
+﻿using Blazor.FileReader;
 
 namespace Gallery
 {
@@ -35,7 +31,7 @@ namespace Gallery
         public string Name;
         public long Size;
         public string Type;
-        public FileStatus Status = GFileInfo.FileStatus.Pending;
+        public FileStatus Status = FileStatus.Pending;
 
         public string GetStatusText()
         {

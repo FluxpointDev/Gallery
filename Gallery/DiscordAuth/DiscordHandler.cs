@@ -1,5 +1,4 @@
-﻿using Gallery;
-using Gallery.Data;
+﻿using Gallery.Data;
 using Gallery.Database;
 using Gallery.DiscordAuth;
 using Microsoft.AspNetCore.Authentication;
