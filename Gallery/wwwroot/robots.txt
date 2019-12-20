@@ -1,0 +1,8 @@
+﻿User-agent: nsa
+Disallow: /
+
+User-agent: *
+Disallow: /login
+Disallow: /logout
+Disallow: /admin
+Allow: /

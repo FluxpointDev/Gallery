@@ -51,44 +51,7 @@
 
         </li>
     </ul>
-
-    @if (Session.LoggedIn)
-    {
-<div class="usermenu">
-    <RadzenImage Path="@Session.State.User.GetAvatarUrl(128)"></RadzenImage>
-    @Session.State.User.GetUser().username
-    <br />
-    <MatTooltip Tooltip="Favourites" Wrap="true" Position="MatTooltipPosition.Top">
-        <MatButton Class="menuicon menuicon-fav" Icon="favorite"></MatButton>
-    </MatTooltip>
-    <MatTooltip Tooltip="Settings" Wrap="true" Position="MatTooltipPosition.Top">
-        <MatButton Class="menuicon menuicon-set" Icon="settings"></MatButton>
-    </MatTooltip>
-    <MatTooltip Tooltip="Logout" Wrap="true" Position="MatTooltipPosition.Top">
-        <a href="/logout"><MatButton Class="menuicon menuicon-logout" Icon="exit_to_app"></MatButton></a>
-    </MatTooltip>
-</div>
-    }
-    else
-    {
-<div class="usermenu">
-    <RadzenImage Path="https://cdn.discordapp.com/embed/avatars/2.png"></RadzenImage>
-    Guest
-    <br />
-    <MatTooltip Tooltip="Favourites" Wrap="true" Position="MatTooltipPosition.Top">
-        <MatButton Class="menuicon menuicon-fav" Icon="favorite"></MatButton>
-    </MatTooltip>
-    <MatTooltip Tooltip="Settings" Wrap="true" Position="MatTooltipPosition.Top">
-        <MatButton Class="menuicon menuicon-set" Icon="settings"></MatButton>
-    </MatTooltip>
-    <form action="/login" method="post">
-        <MatTooltip Tooltip="Login" Wrap="true" Position="MatTooltipPosition.Top">
-            <MatButton Class="menuicon menuicon-login" Icon="vpn_key"></MatButton>
-        </MatTooltip>
-    </form>
-</div>
-    }
-
+    <UserMenu />
 </div>
 
 <style>

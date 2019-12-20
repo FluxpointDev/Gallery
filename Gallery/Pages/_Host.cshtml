@@ -2,19 +2,59 @@
 @namespace Gallery.Pages
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @using EmbeddedBlazorContent
+@using Microsoft.Extensions.Primitives
+
+@{
+    Shared.Meta Meta = Shared.Meta.List.GetValueOrDefault(Request.Path.Value, null);
+    bool isDiscord = false;
+    if (Request.Headers.TryGetValue("User-Agent", out StringValues vs) && vs.Count != 0 && vs[0].ToString().Contains("+https://discordapp.com"))
+    {
+        isDiscord = true;
+    }
+}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" prefix="og: http://ogp.me/ns#">
 <head>
+
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gallery</title>
     <base href="~/" />
+    <title>Fluxpoint Gallery</title>
+    <meta name="keywords" content="fluxpoint,fluxpointdev,fluxpointdevelopment,xxbuilderbxx,discord,gallery,images,anime" />
+    @if (Meta != null)
+    {
+        <meta name="description" content="@Meta.Desc" />
+        <meta itemprop="name" content="@Meta.GetName()" />
+        <meta name="image" content="@Meta.Image" />
+        <meta property="og:url" content="@Meta.GetUrl(Request.Path.Value)" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="@Meta.GetName()" />
+        <meta property="og:site_name" content="Fluxpoint Gallery" />
+        <meta property="og:description" content="@Meta.Desc" />
+        <meta property="og:image" content="@Meta.Image" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="@Meta..GetName()" />
+        <meta name="twitter:description" content="@Meta.Desc" />
+        <meta name="twitter:image" content="@Meta.Image" />
+        <meta name="twitter:creator" content="@@FluxpointDev" />
+    }
+
+    @if (isDiscord)
+    {
+        <meta name="theme-color" content="#f22fa7" />
+    }
+    else
+    {
+        <meta name="theme-color" content="#15202b" />
+    }
+
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
     <link rel="stylesheet" href="_content/Radzen.Blazor/css/default.css">
     <link href="_content/Blazor.ContextMenu/blazorContextMenu.min.css" rel="stylesheet" />
     <link href="css/site.css" rel="stylesheet" />
     <link href="_content/Blazored.Modal/blazored-modal.css" rel="stylesheet" />
+
 
     @Html.EmbeddedBlazorContent()
 </head>
@@ -27,5 +67,19 @@
     <script src="~/javascript/download.js"></script>
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
     <script src="_framework/blazor.server.js"></script>
+
+    @if (!Data.Config.DevMode && !isDiscord)
+    {
+        <script>
+            window.ga = window.ga || function () { (ga.q = ga.q || []).push(arguments) }; ga.l = +new Date;
+            ga('create', 'UA-64450354-6', 'auto');
+            ga('require', 'cleanUrlTracker');
+            ga('require', 'outboundLinkTracker');
+            ga('require', 'urlChangeTracker');
+            ga('send', 'pageview');
+        </script>
+        <script async src="https://www.google-analytics.com/analytics.js"></script>
+        <script src="~/javascript/autotrack.js"></script>
+    }
 </body>
 </html>

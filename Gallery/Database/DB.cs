@@ -43,6 +43,29 @@ namespace Gallery.Database
             Images = images.ToDictionary(x => x.id, x => x);
             HashSet = Images.Values.ToDictionary(x => x.file.hash, x => x.id);
 
+            foreach (GAlbum a in Albums.Values)
+            {
+                if (a.isNsfw)
+                    Shared.Meta.List.Add("/album/" + a.id, new Shared.Meta
+                    {
+                        Name = a.name + " (Nsfw)",
+                        Desc = $"Album with {Images.Values.Where(x => x.album == a.id).Count()} images."
+                    });
+                else
+                {
+                    string image = "";
+                    if (!string.IsNullOrEmpty(a.thumbnailImage) && Images.TryGetValue(a.thumbnailImage, out GImage Thumb))
+                        image = Thumb.GetImage(imageType.Thumbnail);
+
+                    Shared.Meta.List.Add("/album/" + a.id, new Shared.Meta
+                    {
+                        Name = a.name,
+                        Image = image,
+                        Desc = $"Album with {Images.Values.Where(x => x.album == a.id).Count()} images."
+                    });
+                }
+            }
+
             Cursor<GTag> tags = R.Db("Gallery").Table("Tags").RunCursor<GTag>(Con);
             Tags = tags.ToDictionary(x => x.id, x => x);
 
