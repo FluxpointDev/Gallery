@@ -62,11 +62,12 @@
     <app>
         @(await Html.RenderComponentAsync<App>(RenderMode.Server))
     </app>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
+    <script src="_framework/blazor.server.js"></script>
     <script src="_content/Blazor.ContextMenu/blazorContextMenu.min.js"></script>
     <script src="~/javascript/clipboard.js"></script>
     <script src="~/javascript/download.js"></script>
-    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
-    <script src="_framework/blazor.server.js"></script>
+    <script src="~/javascript/scrollto.js"></script>
 
     @if (!Data.Config.DevMode && !isDiscord)
     {

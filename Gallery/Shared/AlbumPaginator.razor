@@ -1,0 +1,110 @@
+﻿    <div class="ui-paginator-custom ui-paginator ui-widget ui-widget-header ui-unselectable-text ui-helper-clearfix">
+    @if (CurrentPage != 0)
+    {
+        <a class="ui-paginator-first ui-paginator-element ui-state-default ui-corner-all" @onclick="@(() => GoToPage(0))" href="javascript:void(0)" tabindex="-1">
+            <span class="ui-paginator-icon pi pi-step-backward"></span>
+        </a>
+    }
+    else
+    {
+        <a class="ui-paginator-first ui-paginator-element ui-state-default ui-corner-all ui-state-disabled" href="javascript:void(0)" tabindex="-1">
+            <span class="ui-paginator-icon pi pi-step-backward"></span>
+        </a>
+    }
+
+
+    @if (CurrentPage > 0)
+    {
+        <a class="ui-paginator-prev ui-paginator-element ui-state-default ui-corner-all" @onclick="@(() => GoToPage(CurrentPage - 1))" href="javascript:void(0)" tabindex="-1">
+            <span class="ui-paginator-icon pi pi-caret-left"></span>
+        </a>
+    }
+    else
+    {
+        <a class="ui-paginator-prev ui-paginator-element ui-state-default ui-corner-all ui-state-disabled" tabindex="-1">
+            <span class="ui-paginator-icon pi pi-caret-left"></span>
+        </a>
+    }
+
+    <span class="ui-paginator-pages">
+        @if (!(CurrentPage < 0) && CurrentPage > 1)
+        {
+            <a class="ui-paginator-page ui-paginator-element ui-state-default ui-corner-all" @onclick="@(() => GoToPage(CurrentPage - 2))" href="javascript:void(0)">@NextNumber(-1)</a>
+        }
+        @if (!(CurrentPage < 0) && CurrentPage > 0)
+        {
+            <a class="ui-paginator-page ui-paginator-element ui-state-default ui-corner-all" @onclick="@(() => GoToPage(CurrentPage - 1))" href="javascript:void(0)">@NextNumber(0)</a>
+        }
+        <a class="ui-state-default ui-corner-all ui-state-active">@NextNumber(1) / @MaxPageCount</a>
+        @if (!(CurrentPage > MaxPageCount) && (CurrentPage + 1) < MaxPageCount)
+        {
+            <a class="ui-paginator-page ui-paginator-element ui-state-default ui-corner-all" @onclick="@(() => GoToPage(CurrentPage + 1))" href="javascript:void(0)">@NextNumber(2)</a>
+        }
+        @if (!(CurrentPage > MaxPageCount) && (CurrentPage + 2) < MaxPageCount)
+        {
+            <a class="ui-paginator-page ui-paginator-element ui-state-default ui-corner-all" @onclick="@(() => GoToPage(CurrentPage + 1))" href="javascript:void(0)">@NextNumber(3)</a>
+        }
+    </span>
+
+
+
+    @if (MaxPageCount == 1 || (CurrentPage + 1) == MaxPageCount)
+    {
+        <a class="ui-paginator-next ui-paginator-element ui-state-default ui-corner-all ui-state-disabled" tabindex="0">
+            <span class="ui-paginator-icon pi pi-caret-right"></span>
+        </a>
+    }
+    else
+    {
+        <a class="ui-paginator-next ui-paginator-element ui-state-default ui-corner-all" @onclick="@(() => GoToPage(CurrentPage + 1))" href="javascript:void(0)" tabindex="0">
+            <span class="ui-paginator-icon pi pi-caret-right"></span>
+        </a>
+    }
+
+    @if (MaxPageCount == 1 || (CurrentPage + 1) == MaxPageCount)
+    {
+        <a class="ui-paginator-last ui-paginator-element ui-state-default ui-corner-all ui-state-disabled"  tabindex="0">
+            <span class="ui-paginator-icon pi pi-step-forward"></span>
+        </a>
+    }
+    else
+    {
+        <a class="ui-paginator-last ui-paginator-element ui-state-default ui-corner-all" @onclick="@(() => GoToPage(MaxPageCount - 1))" href="javascript:void(0)" tabindex="0">
+            <span class="ui-paginator-icon pi pi-step-forward"></span>
+        </a>
+    }
+
+
+</div>
+
+<style>
+    .ui-paginator-prev {
+    color: white;
+    background-color: #479cc8;
+}
+.ui-paginator-first {
+    color: white;
+    background-color: #479cc8;
+}
+</style>
+
+@code {
+    [Parameter]
+    public int CurrentPage { get; set; }
+
+    [Parameter]
+    public int MaxPageCount { get; set; }
+
+    [Parameter]
+    public EventCallback<int> PageCountChanged { get; set; }
+
+    public int NextNumber(int offset)
+    {
+        return CurrentPage + offset;
+    }
+
+    public async Task GoToPage(int number)
+    {
+        await PageCountChanged.InvokeAsync(number);
+    }
+}
