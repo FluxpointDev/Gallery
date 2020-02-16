@@ -19,11 +19,12 @@ namespace Gallery.Controllers
         {
             code = cd;
             message = msg;
-            if (code != 200 && code != 418)
-                status = "error";
+
+            if (code == 200)
+                success = true;
         }
 
-        public string status = "ok";
+        public bool success = false;
         public int code = 200;
         public string message = "";
     }

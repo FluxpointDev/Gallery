@@ -21,26 +21,28 @@
         {
         @foreach (GAlbum a in Albums)
         {
+            if (!a.isPublic && a.owner != Session.State.User.GetId())
+                continue;
         <div class="mat-layout-grid-cell">
             <MatCard class="demo-mat-card">
                 <MatRipple>
                     <a href="@("/album/" + a.id.ToString())">
                         <MatCardContent>
-                                <MatCardMedia Wide="true" Style="width:320px;" ImageUrl="@a.GetThumbnailImage()"></MatCardMedia>
-                            
-                                <div class="demo-mat-card-content">
-                                    <MatHeadline6 class="demo-mat-card-clean-margin">
-                                        @if (a.isNsfw)
-                                        {
-                                            @(@a.name + " (Nsfw)")
-                                        }
-                                        else
-                                        {
-                                            @a.name
-                                        }
+                            <MatCardMedia Wide="true" Style="width:320px;" ImageUrl="@a.GetThumbnailImage()"></MatCardMedia>
 
-                                    </MatHeadline6>
-                                </div>
+                            <div class="demo-mat-card-content">
+                                <MatHeadline6 class="demo-mat-card-clean-margin">
+                                    @if (a.isNsfw)
+                                    {
+                                        @(@a.name + " (Nsfw)")
+                                    }
+                                    else
+                                    {
+                                        @a.name
+                                    }
+
+                                </MatHeadline6>
+                            </div>
                         </MatCardContent>
                     </a>
                 </MatRipple>

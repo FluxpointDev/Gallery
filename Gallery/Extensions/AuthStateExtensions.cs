@@ -11,6 +11,8 @@ namespace Gallery
     {
         public static string GetId(this ClaimsPrincipal pr)
         {
+            if (!pr.Identity.IsAuthenticated)
+                return "0";
             return pr.Claims.ElementAt(0).Value;
         }
 

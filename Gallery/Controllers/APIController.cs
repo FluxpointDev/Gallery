@@ -7,8 +7,13 @@ using Gallery.Database;
 
 namespace Gallery.Controllers
 {
-    public class ApiImage
+    public class ApiImage : Response
     {
+        public ApiImage() : base(200, "")
+        {
+
+        }
+
         public string file = "";
     }
 
