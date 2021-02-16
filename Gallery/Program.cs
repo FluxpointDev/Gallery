@@ -50,7 +50,7 @@ namespace Gallery
             return ms.ToArray();
         }
 
-        public static HttpClient Http = new HttpClient();
+        public static HttpClient Http { get; set; } = new HttpClient();
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)

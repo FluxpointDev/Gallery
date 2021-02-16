@@ -48,6 +48,7 @@ namespace Gallery
             {
                 o.MaximumReceiveMessageSize = 10 * 1024 * 1024; // 10MB
             });
+
             services.AddFileReaderService(options => options.InitializeOnFirstCall = true);
             services.AddBlazoredModal();
             services.AddAuthentication(options =>
@@ -76,12 +77,14 @@ namespace Gallery
                };
                options.Events.OnAccessDenied = context =>
                {
+                   Console.WriteLine("ACCESS DENIED\n\n\n");
                    context.Response.Redirect(context.ReturnUrl);
                    context.SkipHandler();
                    return Task.FromResult(0);
                };
                options.Events.OnRemoteFailure = context =>
                {
+                   Console.WriteLine("ERROR OCCURED\n\n\n");
                    if (context.Failure.Message == "Correlation failed")
                        context.Response.Redirect(context.Properties.RedirectUri);
                    else
@@ -89,6 +92,7 @@ namespace Gallery
                    context.SkipHandler();
                    return Task.FromResult(0);
                };
+               options.CorrelationCookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax;
            });
             services.AddBlazorContextMenu(options =>
             {
@@ -106,6 +110,7 @@ namespace Gallery
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            Console.WriteLine(env.IsDevelopment());
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -114,6 +119,7 @@ namespace Gallery
             {
                 app.UseExceptionHandler("/Error");
             }
+
             if (Config.Tokens.ContainsKey("rethink.ip"))
             {
                 DB.Start();

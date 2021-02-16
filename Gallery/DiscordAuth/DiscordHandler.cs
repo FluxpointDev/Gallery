@@ -30,6 +30,7 @@ namespace Discord.OAuth2
             if (!response.IsSuccessStatusCode)
                 throw new HttpRequestException($"Failed to retrieve Discord user information ({response.StatusCode}).");
             string UserJson = await response.Content.ReadAsStringAsync();
+            
             UserInfoJson User = Newtonsoft.Json.JsonConvert.DeserializeObject<UserInfoJson>(UserJson);
             RethinkUser DBUser = await DB.User.Get(User.id, $"{User.username}#{User.discriminator}", true);
 
