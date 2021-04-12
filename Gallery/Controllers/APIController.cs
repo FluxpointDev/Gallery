@@ -65,7 +65,7 @@ namespace Gallery.Controllers
             return Ok(new ApiImage { file = File });
         }
 
-        [HttpGet("/api/action/{type}")]
+        [HttpGet("/api/sfw/gif/{type}")]
         public IActionResult GetAction(string type)
         {
             int Album = 0;
@@ -115,6 +115,12 @@ namespace Gallery.Controllers
                     break;
                 case "fluff":
                     Album = 35;
+                    break;
+                case "baka":
+                    Album = 36;
+                    break;
+                case "smug":
+                    Album = 37;
                     break;
             }
             if (Album != 0)
