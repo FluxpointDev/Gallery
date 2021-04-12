@@ -70,7 +70,7 @@ namespace Discord.OAuth2
                 if (DBUser.Donator)
                     GUser.upload.imageLimit = 50;
                 DB.GalleryUsers.Add(User.id, GUser);
-                DB.R.Db("Gallery").Table("Users").Insert(GUser).RunNoReply(DB.Con);
+                DB.R.Db(Gallery.Program.DatabaseName).Table("Users").Insert(GUser).RunNoReply(DB.Con);
             }
                 
             await Events.CreatingTicket(context);

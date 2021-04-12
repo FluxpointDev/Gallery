@@ -28,7 +28,7 @@
     {
         if (DB.Images.TryGetValue(Image, out GImage Img))
         {
-            DB.R.Db("Gallery").Table("Images").Get(Img.id).Delete().RunNoReply(DB.Con);
+            DB.R.Db(Program.DatabaseName).Table("Images").Get(Img.id).Delete().RunNoReply(DB.Con);
 
             if (File.Exists(Img.GetFile(imageType.Full)))
                 File.Delete(Img.GetFile(imageType.Full));

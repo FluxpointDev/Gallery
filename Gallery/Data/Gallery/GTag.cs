@@ -14,12 +14,12 @@ namespace Gallery.Data
         public void Add()
         {
             if (!Config.DevMode)
-                DB.R.Db("Gallery").Table("Tags").Insert(this).RunNoReply(DB.Con);
+                DB.R.Db(Program.DatabaseName).Table("Tags").Insert(this).RunNoReply(DB.Con);
         }
         public void Update()
         {
             if (!Config.DevMode)
-                DB.R.Db("Gallery").Table("Tags").Get(id).Update(this).RunNoReply(DB.Con);
+                DB.R.Db(Program.DatabaseName).Table("Tags").Get(id).Update(this).RunNoReply(DB.Con);
         }
     }
 }

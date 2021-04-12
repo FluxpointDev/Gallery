@@ -1,5 +1,6 @@
 ﻿using Gallery.Database;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Gallery.Data
 {
@@ -11,6 +12,7 @@ namespace Gallery.Data
         public bool isNsfw = false;
         public string owner = "";
         public string thumbnailImage = "";
+        public bool isSubAlbum = false;
         public int subAlbum = 0;
         public Dictionary<int, GAccess> roleAccess = new Dictionary<int, GAccess>();
 
@@ -37,12 +39,12 @@ namespace Gallery.Data
         public void Add()
         {
             if (!Config.DevMode)
-                DB.R.Db("Gallery").Table("Albums").Insert(this).RunNoReply(DB.Con);
+                DB.R.Db(Program.DatabaseName).Table("Albums").Insert(this).RunNoReply(DB.Con);
         }
         public void Update()
         {
             if (!Config.DevMode)
-                DB.R.Db("Gallery").Table("Albums").Get(id).Update(this).RunNoReply(DB.Con);
+                DB.R.Db(Program.DatabaseName).Table("Albums").Get(id).Update(this).RunNoReply(DB.Con);
         }
     }
 }

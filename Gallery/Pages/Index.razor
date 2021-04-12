@@ -78,8 +78,8 @@
     protected override void OnInitialized()
     {
         if (Session.Nsfw)
-            Albums = DB.Albums.Values.Where(x => x.id != 9).ToList();
+            Albums = DB.Albums.Values.Where(x => x.subAlbum == 0).ToList();
         else
-            Albums = DB.Albums.Values.Where(x => !x.isNsfw && x.id != 9).ToList();
+            Albums = DB.Albums.Values.Where(x => !x.isNsfw && x.subAlbum == 0).ToList();
     }
 }

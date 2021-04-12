@@ -33,13 +33,13 @@ namespace Gallery.Database
             .Timeout(60)
             .Connect();
             Con.CheckOpen();
-            Cursor<GUser> users = R.Db("Gallery").Table("Users").RunCursor<GUser>(Con);
+            Cursor<GUser> users = R.Db(Program.DatabaseName).Table("Users").RunCursor<GUser>(Con);
             GalleryUsers = users.ToDictionary(x => x.id, x => x);
 
-            Cursor<GAlbum> albums = R.Db("Gallery").Table("Albums").RunCursor<GAlbum>(Con);
+            Cursor<GAlbum> albums = R.Db(Program.DatabaseName).Table("Albums").RunCursor<GAlbum>(Con);
             Albums = albums.ToDictionary(x => x.id, x => x);
 
-            Cursor<GImage> images = R.Db("Gallery").Table("Images").RunCursor<GImage>(Con);
+            Cursor<GImage> images = R.Db(Program.DatabaseName).Table("Images").RunCursor<GImage>(Con);
             Images = images.ToDictionary(x => x.id, x => x);
             HashSet = Images.Values.ToDictionary(x => x.file.hash, x => x.id);
 
@@ -66,7 +66,7 @@ namespace Gallery.Database
                 }
             }
 
-            Cursor<GTag> tags = R.Db("Gallery").Table("Tags").RunCursor<GTag>(Con);
+            Cursor<GTag> tags = R.Db(Program.DatabaseName).Table("Tags").RunCursor<GTag>(Con);
             Tags = tags.ToDictionary(x => x.id, x => x);
 
             Cursor<ApiUser> keys = R.Db("API").Table("Users").RunCursor<ApiUser>(Con);

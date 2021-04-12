@@ -11,7 +11,7 @@ namespace Gallery.Data
         public string link = "";
         public string source = "";
         public string author = "";
-        public List<int> tags = new List<int>();
+        public HashSet<int> tags = new HashSet<int>();
         public int album = 0;
         public DateTime date = DateTime.UtcNow;
         public FileInfo file = new FileInfo();
@@ -67,12 +67,12 @@ namespace Gallery.Data
         public void Add()
         {
             if (!Config.DevMode)
-                DB.R.Db("Gallery").Table("Images").Insert(this).RunNoReply(DB.Con);
+                DB.R.Db(Program.DatabaseName).Table("Images").Insert(this).RunNoReply(DB.Con);
         }
         public void Update()
         {
             if (!Config.DevMode)
-                DB.R.Db("Gallery").Table("Images").Get(id).Update(this).RunNoReply(DB.Con);
+                DB.R.Db(Program.DatabaseName).Table("Images").Get(id).Update(this).RunNoReply(DB.Con);
         }
     }
     public enum imageType

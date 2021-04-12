@@ -46,7 +46,45 @@ else
         {
             <h1 id="title">@GetAlbum.name</h1>
         }
+        @if (SubAlbums != null)
+        {
+        <div class="mat-layout-grid">
+    <div class="mat-layout-grid-inner">
+        
+        @foreach (GAlbum a in SubAlbums)
+        {
+            if (!a.isPublic && a.owner != Session.State.User.GetId())
+                continue;
+        <div class="mat-layout-grid-cell">
+            <MatCard class="demo-mat-card">
+                <MatRipple>
+                    <a href="@("/album/" + a.id.ToString())">
+                        <MatCardContent>
+                            <MatCardMedia Wide="true" Style="width:320px;" ImageUrl="@a.GetThumbnailImage()"></MatCardMedia>
 
+                            <div class="demo-mat-card-content">
+                                <MatHeadline6 class="demo-mat-card-clean-margin">
+                                    @if (a.isNsfw)
+                                    {
+                                        @(@a.name + " (Nsfw)")
+                                    }
+                                    else
+                                    {
+                                        @a.name
+                                    }
+
+                                </MatHeadline6>
+                            </div>
+                        </MatCardContent>
+                    </a>
+                </MatRipple>
+            </MatCard>
+        </div>
+        }
+        
+    </div>
+</div>
+}
         if (Images.Count() == 0)
         {
             <p>This album has no images :(</p>
@@ -188,6 +226,22 @@ else
 }
 </style>
 
+<style>
+    .demo-mat-card {
+        max-width: 320px;
+         text-align: center;
+    background-color: #343a40;
+    }
+
+    .demo-mat-card-content {
+        padding: 1rem;
+    }
+
+    .demo-mat-card-clean-margin {
+        margin: 0px;
+    }
+</style>
+
 @code {
     [Parameter]
     public string albumid { get; set; } = "0";
@@ -232,8 +286,12 @@ else
 
     }
 
+    List<GAlbum> SubAlbums = null;
+
     protected override async Task OnParametersSetAsync()
     {
+        Images = null;
+        SubAlbums = null;
         Private = false;
         if (CurrentPage != 0)
         {
@@ -248,6 +306,11 @@ else
         }
         if (DB.Albums.TryGetValue(number, out GAlbum GAlbum))
         {
+            if (GAlbum.isSubAlbum)
+            {
+                SubAlbums = DB.Albums.Values.Where(x => x.subAlbum == GAlbum.id).ToList();
+            }
+
             if (!GAlbum.isPublic)
             {
                 var Auth = await Authentication.GetAuthenticationStateAsync();

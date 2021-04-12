@@ -65,6 +65,68 @@ namespace Gallery.Controllers
             return Ok(new ApiImage { file = File });
         }
 
+        [HttpGet("/api/action/{type}")]
+        public IActionResult GetAction(string type)
+        {
+            int Album = 0;
+            switch (type.ToLower())
+            {
+                case "hug":
+                    Album = 21;
+                    break;
+                case "pat":
+                    Album = 22;
+                    break;
+                case "feed":
+                    Album = 23;
+                    break;
+                case "bite":
+                    Album = 24;
+                    break;
+                case "highfive":
+                    Album = 25;
+                    break;
+                case "kiss":
+                    Album = 26;
+                    break;
+                case "lick":
+                    Album = 27;
+                    break;
+                case "poke":
+                    Album = 28;
+                    break;
+                case "punch":
+                    Album = 29;
+                    break;
+                case "slap":
+                    Album = 30;
+                    break;
+                case "tickle":
+                    Album = 31;
+                    break;
+                case "wasted":
+                    Album = 32;
+                    break;
+                case "wink":
+                    Album = 33;
+                    break;
+                case "wag":
+                    Album = 34;
+                    break;
+                case "fluff":
+                    Album = 35;
+                    break;
+            }
+            if (Album != 0)
+            {
+                IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == Album);
+                int ID = Program.rng.Next(0, List.Count() - 1);
+                string File = List.ElementAt(ID).GetImage(imageType.Full);
+                return Ok(new ApiImage { file = File });
+            }
+            return BadRequest("Invalid action type.");
+        }
+
         [HttpGet("/api/sfw/anime")]
         public IActionResult GetSfwAnime()
         {
@@ -200,7 +262,6 @@ namespace Gallery.Controllers
             };
             DB.Images.Add(ID, img);
             img.Add();
-
             return Ok();
         }
 

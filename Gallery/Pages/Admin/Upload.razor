@@ -1,5 +1,5 @@
 ﻿@page "/upload"
-@attribute [Authorize(Roles = "owner")]
+@attribute [Authorize]
 @using System.IO;
 @using Blazor.FileReader
 @using ImageMagick
@@ -9,6 +9,15 @@
 @using Gallery.Database
 @inject AuthenticationStateProvider Authentication
 
+@if (!hasUploadAccess)
+{
+    <center>
+        <h3>No Upload Access</h3>
+        <p>You do not have permission to upload images.</p>
+    </center>
+}
+else
+{
 <h3>Album</h3>
 <MatAutocomplete Collection="@Albums" ItemType="GAlbum" ShowClearButton="true" Label="Select an album" CustomStringSelector="@(i => i.GetComboxName())" @bind-Value="@Album">
     <ItemTemplate>
@@ -77,14 +86,14 @@ else if (status == UploadStatus.Done)
 }
 
 <style>
-     .@dropTargetClass {
+     .dropTargetClass {
         display:block;
         padding: 20px;
         margin-bottom: 10px;
         border: 1px dashed black;
         border-radius: 5px;
     }
-    .@dropTargetDragClass {
+    .dropTargetDragClass {
         border-color: orangered;
         font-weight: bold;
     }
@@ -104,11 +113,12 @@ else if (status == UploadStatus.Done)
      color: white !important;
 }
 </style>
+}
 
 @code {
     ElementReference dropTargetElement;
     IFileReaderRef dropReference;
-
+    bool hasUploadAccess = false;
     const string dropTargetDragClass = "droptarget-drag";
     const string dropTargetClass = "droptarget";
     private List<string> _dropClasses = new List<string>() { dropTargetClass };
@@ -132,20 +142,33 @@ else if (status == UploadStatus.Done)
 
     }
 
+    [CascadingParameter]
+    private Session Session { get; set; }
+
     GAlbum[] Albums = new GAlbum[0];
 
     List<GFileInfo> FileList { get; } = new List<GFileInfo>();
 
     protected override async Task OnInitializedAsync()
     {
-        Albums = DB.Albums.Values.ToArray();
+        DB.GalleryUsers.TryGetValue(Session.State.User.GetId(), out GUser User);
+        if (Session.State.User.GetId() == "190590364871032834")
+        {
+            hasUploadAccess = true;
+            Albums = DB.Albums.Values.ToArray();
+        }
+        else if (User.upload.enabled)
+        {
+            hasUploadAccess = true;
+            Albums = DB.Albums.Values.Where(x => x.owner == User.id).ToArray();
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool isFirstRender)
     {
-        if (isFirstRender)
+        if (hasUploadAccess && dropReference == null)
         {
-            dropReference = fileReaderService.CreateReference(dropTargetElement);
+             dropReference = fileReaderService.CreateReference(dropTargetElement);
             await dropReference.RegisterDropEventsAsync(true);
         }
     }

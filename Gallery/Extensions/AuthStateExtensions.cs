@@ -31,7 +31,7 @@ namespace Gallery
                 return User;
             else
             {
-                User = await DB.R.Db("Gallery").Table("Users").Get(pr.GetId()).RunAtomAsync<GUser>(DB.Con);
+                User = await DB.R.Db(Program.DatabaseName).Table("Users").Get(pr.GetId()).RunAtomAsync<GUser>(DB.Con);
                 DB.GalleryUsers.Add(pr.GetId(), User);
                 return User;
             }

@@ -26,7 +26,7 @@ namespace Gallery.Data
         {
             if (DevMode)
             {
-                ConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DiscordBots");
+                ConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DiscordBots/Gallery/");
                 GlobalPath = "C:/Global/Website/";
             }
             else
