@@ -10,7 +10,7 @@ namespace Gallery
             Size = fi.Size;
             if (Size < 1)
                 Status = FileStatus.InvalidSize;
-            if (Size > 5242880)
+            if (Size > 7340032)
                 Status = FileStatus.MaxSize;
             switch (fi.Type)
             {
