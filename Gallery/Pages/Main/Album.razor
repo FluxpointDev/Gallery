@@ -30,6 +30,10 @@ else if (GetAlbum.isNsfw && !Session.Nsfw)
         </center>
     </div>
 }
+else if (GetAlbum.isAPIOnly)
+    {
+        <h3>This album is limited to the API only.</h3>
+}
 else
 {
     @if (Images == null)
@@ -48,10 +52,12 @@ else
         }
         @if (SubAlbums != null)
         {
+
+
         <div class="mat-layout-grid">
-    <div class="mat-layout-grid-inner">
+        <div class="mat-layout-grid-inner">
         
-        @foreach (GAlbum a in SubAlbums)
+        @foreach (GAlbum a in SubAlbums.OrderBy(x => x.name))
         {
             if (!a.isPublic && a.owner != Session.State.User.GetId())
                 continue;
@@ -70,7 +76,7 @@ else
                                     }
                                     else
                                     {
-                                        @a.name
+                                        @(a.name + $" ({DB.Images.Values.Where(x => x.album == a.id).Count()})")
                                     }
 
                                 </MatHeadline6>
@@ -329,22 +335,33 @@ else
                     {
                         Private = true;
                         GetAlbum = new GAlbum { id = 0, name = "RESTRICTED" };
+                        Images = new List<GImage>();
                     }
                 }
                 else
                 {
                     Private = true;
                     GetAlbum = new GAlbum { id = 0, name = "RESTRICTED" };
+                    Images = new List<GImage>();
                 }
             }
             else
             {
-                GetAlbum = GAlbum;
-                await Task.Run(() =>
+                // Auth.User.IsInRole("owner")
+                if (GAlbum.isAPIOnly)
                 {
-                    Images = DB.Images.Values.Where(x => x.album == GetAlbum.id & !x.options.isDeleted & !x.options.isHidden);
-                    MaxPageCount = (Images.Count() - 1) / PageSize + 1;
-                });
+                    GetAlbum = new GAlbum { id = 0, name = "API Only" };
+                    Images = new List<GImage>();
+                }
+                else
+                {
+                    GetAlbum = GAlbum;
+                    await Task.Run(() =>
+                    {
+                        Images = DB.Images.Values.Where(x => x.album == GetAlbum.id & !x.options.isDeleted & !x.options.isHidden);
+                        MaxPageCount = (Images.Count() - 1) / PageSize + 1;
+                    });
+                }
             }
         }
         else

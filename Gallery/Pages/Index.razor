@@ -19,7 +19,7 @@
     <div class="mat-layout-grid-inner">
         @if (Albums != null)
         {
-        @foreach (GAlbum a in Albums)
+        @foreach (GAlbum a in Albums.OrderBy(x => x.name))
         {
             if (!a.isPublic && a.owner != Session.State.User.GetId())
                 continue;

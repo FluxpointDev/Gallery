@@ -13,6 +13,7 @@ namespace Gallery.Data
         public string owner = "";
         public string thumbnailImage = "";
         public bool isSubAlbum = false;
+        public bool isAPIOnly = false;
         public int subAlbum = 0;
         public Dictionary<int, GAccess> roleAccess = new Dictionary<int, GAccess>();
 
