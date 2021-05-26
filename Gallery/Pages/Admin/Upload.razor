@@ -19,13 +19,21 @@
 else
 {
 <h3>Album</h3>
-<MatAutocomplete Collection="@Albums" ItemType="GAlbum" ShowClearButton="true" Label="Select an album" CustomStringSelector="@(i => i.GetComboxName())" @bind-Value="@Album">
+<MatAutocompleteList  Items="@Albums" TValue="GAlbum" TItem="GAlbum" ShowClearButton="true" Label="Select an album" CustomStringSelector="@(i => NullValue(i))" @bind-Value="@Album">
     <ItemTemplate>
         <div style="display: flex; flex-direction: row; width: 100%;">
                 <div style="flex: 1;">@context.GetComboxName()</div>
         </div>
     </ItemTemplate>
-</MatAutocomplete>
+</MatAutocompleteList>
+<br />
+<MatAutocompleteList  Items="@DB.Tags.Values" TValue="GTag" TItem="GTag" ShowClearButton="true" Label="Select a tag" CustomStringSelector="@(i => NullValue(i))" @bind-Value="@Tag">
+    <ItemTemplate>
+        <div style="display: flex; flex-direction: row; width: 100%;">
+                <div style="flex: 1;">@context.name</div>
+        </div>
+    </ItemTemplate>
+</MatAutocompleteList>
 <br />
 <br />
 <div class="@DropClass"
@@ -124,6 +132,7 @@ else if (status == UploadStatus.Done)
     private List<string> _dropClasses = new List<string>() { dropTargetClass };
 
     string DropClass => string.Join(" ", _dropClasses);
+    
 
     public bool uploadDisabled = false;
 
@@ -135,8 +144,18 @@ else if (status == UploadStatus.Done)
         None, Uploading, Done
     }
 
-    GAlbum Album = null;
+    public string NullValue(GTag tag)
+    {
+        return tag == null ? "" : tag.name;
+    }
 
+      public string NullValue(GAlbum album)
+    {
+        return album == null ? "" : album.GetComboxName();
+    }
+
+    GAlbum Album = null;
+    GTag Tag = null;
     public void Changed()
     {
 
@@ -283,6 +302,12 @@ else if (status == UploadStatus.Done)
                         },
                         album = Album.id
                     };
+                    if (Tag != null)
+                    {
+                        img.tags.Add(Tag.id);
+                        if (Tag.id == 3)
+                            img.tags.Add(2);
+                    }
                     DB.Images.Add(ID, img);
                     img.Add();
                     uploadCount++;

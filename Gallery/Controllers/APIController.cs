@@ -41,7 +41,6 @@ namespace Gallery.Controllers
             return Ok();
         }
 
-        // GET api/<controller>/5
         [HttpGet("/api/album/{id}")]
         public IActionResult GetAlbum(int id)
         {
@@ -60,6 +59,18 @@ namespace Gallery.Controllers
                     return BadRequest("This album is private");
             }
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == id);
+            int ID = Program.rng.Next(0, List.Count() - 1);
+            string File = List.ElementAt(ID).GetImage(imageType.Full);
+            return Ok(new ApiImage { file = File });
+        }
+
+        [HttpGet("/api/tag/{id}")]
+        public IActionResult GetTag(int id)
+        {
+            if (!DB.Tags.TryGetValue(id, out GTag tag))
+                return BadRequest("Unknown Tag");
+
+            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.tags.Contains(id));
             int ID = Program.rng.Next(0, List.Count() - 1);
             string File = List.ElementAt(ID).GetImage(imageType.Full);
             return Ok(new ApiImage { file = File });

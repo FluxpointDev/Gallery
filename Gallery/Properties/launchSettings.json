@@ -18,10 +18,11 @@
     "Gallery": {
       "commandName": "Project",
       "launchBrowser": true,
-      "applicationUrl": "http://localhost:5124",
+      "launchUrl": "admin/images",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      },
+      "applicationUrl": "http://localhost:5124"
     }
   }
 }

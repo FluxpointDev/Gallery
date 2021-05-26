@@ -34,6 +34,17 @@ namespace Gallery.Data
             public bool allowApi = true;
         }
 
+        public HashSet<GTag> GetTags()
+        {
+            HashSet<GTag> Tags = new HashSet<GTag>();
+            foreach(int t in tags)
+            {
+                if (DB.Tags.TryGetValue(t, out GTag tag))
+                    Tags.Add(tag);
+            }
+            return Tags;
+        }
+
         public string GetImage(imageType type)
         {
             switch (type)

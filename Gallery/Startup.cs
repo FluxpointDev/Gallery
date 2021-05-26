@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using BlazorContextMenu;
 using Blazored.Modal;
 using Microsoft.AspNetCore.Components;
+using MatBlazor;
 
 namespace Gallery
 {
@@ -33,11 +34,19 @@ namespace Gallery
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRazorPages();
-            
             services.AddResponseCompression(opts =>
             {
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
                     new[] { "application/octet-stream" });
+            });
+            services.AddMatBlazor();
+            services.AddMatToaster(config =>
+            {
+                config.Position = MatToastPosition.BottomRight;
+                config.PreventDuplicates = true;
+                config.NewestOnTop = true;
+                config.ShowCloseButton = false;
+                config.MaximumOpacity = 100;
             });
             services.AddSingleton<RethinkUpdaterService>();
             services.AddSingleton<System.Net.Http.HttpClient>();
@@ -136,7 +145,7 @@ namespace Gallery
             app.UseAuthentication();
             
             app.UseRouting();
-app.UseAuthorization();
+            app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapBlazorHub();

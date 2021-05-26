@@ -5,6 +5,7 @@
 @using System.IO
 @using MatBlazor
 @attribute [Authorize(Roles = "owner, admin")]
+@inject IMatToaster Toaster
 
 <title>Admin</title>
 <h3>Welcome to the admin page!</h3>
@@ -16,13 +17,39 @@
     <button @onclick="TestClick">Regen thumbnails</button>
     <MatTextField @bind-Value="@Image" Label="Standard"></MatTextField>
     <button @onclick="DeleteImage">Delete image</button>
-
+    <br />
+    <MatTextField @bind-Value="@NewTag" Label="Standard"></MatTextField>
+    <button @onclick="AddTag">Delete image</button>
+    <br />
+    <br />
+    <br />
+    <h3>Database</h3>
+    <br />
+    <MatButton OnClick="@(() => ReloadAction("tags"))" Unelevated="true" Icon="label">Reload Tags</MatButton>
+    <MatButton OnClick="@(() => ReloadAction("images"))" Unelevated="true" Icon="image">Reload Images</MatButton>
+    <MatButton OnClick="@(() => ReloadAction("albums"))" Unelevated="true" Icon="view_comfy">Reload Albums</MatButton>
+    <MatButton OnClick="@(() => ReloadAction("metadata"))" Unelevated="true" Icon="not_listed_location">Reload Metadata</MatButton>
+    <MatButton OnClick="@(() => ReloadAction("users"))" Unelevated="true" Icon="person_pin">Reload Users</MatButton>
+    <MatButton OnClick="@(() => ReloadAction("api"))" Unelevated="true" Icon="vpn_key">Reload API Keys</MatButton>
 </AuthorizeView>
 
 
 
 @code {
     public string Image = "";
+    public string NewTag = "";
+
+    public void AddTag()
+    {
+        int id = DB.Tags.Values.OrderByDescending(x => x.id).First().id + 1;
+         GTag newtag = new GTag()
+         {
+             id = id,
+             name = NewTag
+         };
+         DB.Tags.Add(id, newtag);
+        newtag.Add();
+    }
 
     void DeleteImage()
     {
@@ -61,4 +88,46 @@
         }
         Console.WriteLine("DONE");
     }
+
+    public void ReloadAction(string type)
+    {
+        switch (type)
+        {
+            case "tags":
+                DB.ReloadTags();
+                break;
+                case "albums":
+                DB.ReloadAlbums();
+                break;
+                case "images":
+                DB.ReloadImages();
+                break;
+                case "metadata":
+                DB.ReloadMetaData();
+                break;
+                case "users":
+                DB.ReloadUsers();
+                break;
+                case "api":
+                DB.ReloadAPIKeys();
+                break;
+        }
+        ShowToast("Reloaded " + type);
+    }
+
+    public void ShowToast(string desc)
+    {
+        Toaster.Add(desc, MatToastType.Success, "", "", config =>
+        {
+            config.ShowCloseButton = false;
+            config.ShowProgressBar = true;
+            config.MaximumOpacity = Convert.ToInt32(100);
+
+            config.ShowTransitionDuration = Convert.ToInt32(500);
+            config.VisibleStateDuration = Convert.ToInt32(8000);
+            config.HideTransitionDuration = Convert.ToInt32(500);
+
+        });
+    }
+        
 }

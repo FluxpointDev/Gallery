@@ -22,27 +22,27 @@ namespace Gallery.Database
         public static Dictionary<int, GTag> Tags = new Dictionary<int, GTag>();
         public static Dictionary<string, ApiUser> Keys = new Dictionary<string, ApiUser>();
 
-        public static Task Start()
+
+        public static void ReloadUsers()
         {
-            Console.WriteLine("Connecting to DB");
-            Con = R.Connection()
-            .Hostname(Config.Tokens["rethink.ip"])
-            .Port(int.Parse(Config.Tokens["rethink.port"]))
-            .AuthKey(Config.Tokens["rethink.auth"])
-            .Db("Global")
-            .Timeout(60)
-            .Connect();
-            Con.CheckOpen();
             Cursor<GUser> users = R.Db(Program.DatabaseName).Table("Users").RunCursor<GUser>(Con);
             GalleryUsers = users.ToDictionary(x => x.id, x => x);
-
+        }
+        public static void ReloadAlbums()
+        {
             Cursor<GAlbum> albums = R.Db(Program.DatabaseName).Table("Albums").RunCursor<GAlbum>(Con);
             Albums = albums.ToDictionary(x => x.id, x => x);
-
+        }
+        public static void ReloadImages()
+        {
             Cursor<GImage> images = R.Db(Program.DatabaseName).Table("Images").RunCursor<GImage>(Con);
             Images = images.ToDictionary(x => x.id, x => x);
             HashSet = Images.Values.ToDictionary(x => x.file.hash, x => x.id);
+        }
 
+        public static void ReloadMetaData()
+        {
+            Shared.Meta.List.Clear();
             foreach (GAlbum a in Albums.Values)
             {
                 if (a.isNsfw)
@@ -65,13 +65,37 @@ namespace Gallery.Database
                     });
                 }
             }
+        }
 
+        public static void ReloadTags()
+        {
             Cursor<GTag> tags = R.Db(Program.DatabaseName).Table("Tags").RunCursor<GTag>(Con);
             Tags = tags.ToDictionary(x => x.id, x => x);
+        }
 
+        public static void ReloadAPIKeys()
+        {
             Cursor<ApiUser> keys = R.Db("API").Table("Users").RunCursor<ApiUser>(Con);
             Keys = keys.ToDictionary(x => x.Token, x => x);
+        }
 
+        public static Task Start()
+        {
+            Console.WriteLine("Connecting to DB");
+            Con = R.Connection()
+            .Hostname(Config.Tokens["rethink.ip"])
+            .Port(int.Parse(Config.Tokens["rethink.port"]))
+            .AuthKey(Config.Tokens["rethink.auth"])
+            .Db("Global")
+            .Timeout(60)
+            .Connect();
+            Con.CheckOpen();
+            ReloadUsers();
+            ReloadAlbums();
+            ReloadImages();
+            ReloadMetaData();
+            ReloadTags();
+            ReloadAPIKeys();
             UserFeeds.Setup();
 
             Connected = true;

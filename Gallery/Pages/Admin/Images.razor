@@ -12,43 +12,47 @@
 <MatTextField @bind-Value="@hash" Label="Image Hash"></MatTextField>
 <br />
 <br />
-<MatSlideToggle @bind-Checked="@allowApi" Label="Allow API"></MatSlideToggle>
-<MatSlideToggle @bind-Checked="@hidden" Label="Hidden"></MatSlideToggle>
-<MatSlideToggle @bind-Checked="@deleted" Label="Deleted"></MatSlideToggle>
+<MatSlideToggle @bind-Value="@allowApi" Label="Allow API"></MatSlideToggle>
+<MatSlideToggle @bind-Value="@hidden" Label="Hidden"></MatSlideToggle>
+<MatSlideToggle @bind-Value="@deleted" Label="Deleted"></MatSlideToggle>
 <br />
 <br />
-<MatAutocomplete Collection="@Albums" ItemType="GAlbum" ShowClearButton="true" Label="Select an album" CustomStringSelector="@(i => i.GetComboxName())" @bind-Value="@Album">
+<MatAutocompleteList  Items="@Albums" TValue="GAlbum" TItem="GAlbum" ShowClearButton="true" Label="Select an album" CustomStringSelector="@(i => NullValue(i))" @bind-Value="@Album">
     <ItemTemplate>
         <div style="display: flex; flex-direction: row; width: 100%;">
             <div style="flex: 1;">@context.GetComboxName()</div>
         </div>
     </ItemTemplate>
-</MatAutocomplete>
-<MatAutocomplete Collection="@Tags" ItemType="GTag" ShowClearButton="true" Label="Select a tag" CustomStringSelector="@(i => i.name)" @bind-Value="@Tag">
+</MatAutocompleteList>
+<MatAutocompleteList  Items="@Tags" TValue="GTag" TItem="GTag" ShowClearButton="true" Label="Select a tag" CustomStringSelector="@(i => NullValue(i))" @bind-Value="@Tag">
     <ItemTemplate>
         <div style="display: flex; flex-direction: row; width: 100%;">
             <div style="flex: 1;">@context.name</div>
         </div>
     </ItemTemplate>
-</MatAutocomplete>
+</MatAutocompleteList>
 <MatSelect Label="Content" @bind-Value="@Content">
-    <MatOption Value="All">All</MatOption>
-    <MatOption Value="Sfw">Sfw</MatOption>
-    <MatOption Value="Nsfw">Nsfw</MatOption>
+    <MatOption TValue="string" Value="@("All")">All</MatOption>
+    <MatOption TValue="string" Value="@("Sfw")">Sfw</MatOption>
+    <MatOption TValue="string" Value="@("Nsfw")">Nsfw</MatOption>
 </MatSelect>
 <br />
 <br />
 <MatButton Unelevated="true" OnClick="@Click">Refresh</MatButton>
 <br />
-<MatTable Items="@ImagesList">
+
+<div class="mat-layout-grid">
+<div class="mat-layout-grid-inner">
+                <div class="mat-layout-grid-cell mat-layout-grid-cell-span-8">
+                    <MatTable Items="@GetImagesList()" AllowSelection="true" RowClass="GImage" SelectionChanged="SelectionChangedEvent">
     <MatTableHeader>
-        <th></th>
+         <th></th>
         <th>Image ID</th>
         <th>Image Name</th>
         <th>Author</th>
     </MatTableHeader>
     <MatTableRow>
-        <td><MatButton Unelevated="true">Edit</MatButton></td>
+        <td>@GetNumber()</td>
         <td>@context.id</td>
         <td>@context.name</td>
         @if (context.author == "")
@@ -66,6 +70,27 @@
     </MatTableRow>
 </MatTable>
 
+        </div>
+        @if (SelectedId != "0")
+        {
+            <div class="mat-layout-grid-cells sidebar-cell">
+                <div class="sticky-cell">
+                    <a href="@SelectedImage()" target="_blank"><img src="@SelectedImage()" /></a>
+                    <p>@GetTags()</p>
+                    <MatAutocompleteList Items="@Tags" TValue="GTag" TItem="GTag" ShowClearButton="true" Label="Select a tag" CustomStringSelector="@(i => NullValue(i))" @bind-Value="@SelectedTag">
+    <ItemTemplate>
+        <div style="display: flex; flex-direction: row; width: 100%;">
+            <div style="flex: 1;">@context.name</div>
+        </div>
+    </ItemTemplate>
+</MatAutocompleteList>
+<MatButton Unelevated="true" OnClick="@ToggleSelectedTag">Toggle Tag</MatButton>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
 <style>
     .mdc-icon-button .material-icons {
         color: black;
@@ -82,6 +107,18 @@
     .mdc-paginator-container {
         color: white !important;
     }
+
+    .sticky-cell {
+  
+    position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+    padding: 10px;
+     min-width: 300px;
+}
+.sticky-cell img {
+    max-width: 300px !important;
+}
 </style>
 
 @code {
@@ -94,13 +131,43 @@
     bool hidden = false;
     bool deleted = false;
 
+    public int NumberRow = 0;
+    public int GetNumber()
+    {
+        NumberRow++;
+        return NumberRow;
+    }
     public string Content = "All";
 
+    public string NullValue(GTag tag)
+    {
+        return tag == null ? "" : tag.name;
+    }
+
+      public string NullValue(GAlbum album)
+    {
+        return album == null ? "" : album.GetComboxName();
+    }
+
+    public string GetTags()
+    {
+        if (DB.Images.TryGetValue(SelectedId, out GImage img))
+        return img.tags.Any() ? string.Join(", ", img.GetTags().Select(x => x.name)) : "No Tags";
+        return "";
+    }
+
+    MatTable<GImage> Context;
     GAlbum Album = null;
     GTag Tag = null;
+    GTag SelectedTag = null;
     GAlbum[] Albums = new GAlbum[0];
     GTag[] Tags = new GTag[0];
     GImage[] ImagesList = new GImage[0];
+    public GImage[] GetImagesList()
+    {
+        NumberRow = 0;
+        return ImagesList;
+    }
     AuthenticationState AuthUser = null;
     protected override async Task OnInitializedAsync()
     {
@@ -109,8 +176,10 @@
         Tags = DB.Tags.Values.ToArray();
     }
 
+
     void Click(MouseEventArgs e)
     {
+        NumberRow = 0;
         ImagesList = new GImage[0];
         StateHasChanged();
         List<GImage> List = new List<GImage>();
@@ -188,4 +257,38 @@
         ImagesList = List.ToArray();
         StateHasChanged();
     }
+
+    public string SelectedId = "0";
+    public string SelectedImage()
+    {
+        if (DB.Images.TryGetValue(SelectedId, out GImage img))
+        return img.GetImage(imageType.Thumbnail);
+        return "";
+    }
+    public void ToggleSelectedTag()
+    {
+        if (SelectedTag != null && DB.Images.TryGetValue(SelectedId, out GImage img))
+        {
+            if (img.tags.Contains(SelectedTag.id))
+                img.tags.Remove(SelectedTag.id);
+            else
+                img.tags.Add(SelectedTag.id);
+                img.Update();
+        }
+    }
+
+    public void SelectionChangedEvent(object row)
+            {
+                 Tags = DB.Tags.Values.ToArray();
+                 NumberRow = 0;
+                if (row == null)
+                {
+                    SelectedId = "0";
+                }
+                else
+                {
+                    SelectedId = ((GImage)row).id;
+                }
+                this.StateHasChanged();
+            }
 }
