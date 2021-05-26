@@ -16,10 +16,12 @@
 <AuthorizeView Roles="owner">
     <button @onclick="TestClick">Regen thumbnails</button>
     <MatTextField @bind-Value="@Image" Label="Standard"></MatTextField>
-    <button @onclick="DeleteImage">Delete image</button>
+    <button @onclick="@DeleteImage">Delete image</button>
     <br />
     <MatTextField @bind-Value="@NewTag" Label="Standard"></MatTextField>
-    <button @onclick="AddTag">Delete image</button>
+    <button @onclick="@AddTag">Add Tag</button>
+    <br />
+    <button @onclick="@MigrateTags">Migrate Tags</button>
     <br />
     <br />
     <br />
@@ -38,6 +40,53 @@
 @code {
     public string Image = "";
     public string NewTag = "";
+
+    public void MigrateTags()
+    {
+         ShowToast("Running migration");
+        foreach(GImage i in DB.Images.Values)
+        {
+            switch (i.album)
+            {
+                case 7:
+                    {
+                        try
+                        {
+                            i.tags.Add(10);
+                        }
+                        catch {}
+                        i.Update();
+                    }
+                break;
+                case 1:
+                    {
+                        try
+                        {
+                            i.tags.Add(12);
+                        }
+                        catch {}
+                        i.Update();
+                    }
+                break;
+                case 8:
+                    {
+                        try
+                        {
+                            i.tags.Add(9);
+                        }
+                        catch {}
+                        try
+                        {
+                            i.tags.Add(1);
+                        }
+                        catch {}
+                        i.Update();
+                    }
+                break;
+            }
+        }
+        ShowToast("Migrated tags data");
+    }
 
     public void AddTag()
     {

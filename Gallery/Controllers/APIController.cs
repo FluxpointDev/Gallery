@@ -70,7 +70,7 @@ namespace Gallery.Controllers
             if (!DB.Tags.TryGetValue(id, out GTag tag))
                 return BadRequest("Unknown Tag");
 
-            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.tags.Contains(id));
+            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.tags.Contains(id) && x.file.type != "gif");
             int ID = Program.rng.Next(0, List.Count() - 1);
             string File = List.ElementAt(ID).GetImage(imageType.Full);
             return Ok(new ApiImage { file = File });
