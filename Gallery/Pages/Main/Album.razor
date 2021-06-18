@@ -30,7 +30,7 @@ else if (GetAlbum.isNsfw && !Session.Nsfw)
         </center>
     </div>
 }
-else if (GetAlbum.isAPIOnly)
+else if (APIOnly)
     {
         <h3>This album is limited to the API only.</h3>
 }
@@ -57,10 +57,8 @@ else
         <div class="mat-layout-grid">
         <div class="mat-layout-grid-inner">
         
-        @foreach (GAlbum a in SubAlbums.OrderBy(x => x.name))
+        @foreach (GAlbum a in SubAlbums)
         {
-            if (!a.isPublic && a.owner != Session.State.User.GetId())
-                continue;
         <div class="mat-layout-grid-cell">
             <MatCard class="demo-mat-card">
                 <MatRipple>
@@ -264,6 +262,7 @@ else
 
     public GAlbum GetAlbum = null;
     public bool Private = false;
+    public bool APIOnly = false;
     public IEnumerable<GImage> Images = null;
     public IEnumerable<GImage> Selected = null;
 
@@ -299,6 +298,7 @@ else
         Images = null;
         SubAlbums = null;
         Private = false;
+        APIOnly = false;
         if (CurrentPage != 0)
         {
             CurrentPage = 0;
@@ -314,29 +314,20 @@ else
         {
             if (GAlbum.isSubAlbum)
             {
-                SubAlbums = DB.Albums.Values.Where(x => x.subAlbum == GAlbum.id).ToList();
+                SubAlbums = DB.Albums.Values.Where(x => x.subAlbum == GAlbum.id && x.HasAccess(Session)).OrderBy(x => x.name).ToList();
             }
-
+            var Auth = await Authentication.GetAuthenticationStateAsync();
             if (!GAlbum.isPublic)
             {
-                var Auth = await Authentication.GetAuthenticationStateAsync();
-                if (Auth.User.Identity.IsAuthenticated)
+                bool Access = GAlbum.HasAccess(Session);
+                if (Access)
                 {
-                    if (Auth.User.IsInRole("owner"))
+                    GetAlbum = GAlbum;
+                    await Task.Run(() =>
                     {
-                        GetAlbum = GAlbum;
-                        await Task.Run(() =>
-                        {
-                            Images = DB.Images.Values.Where(x => x.album == GetAlbum.id & !x.options.isDeleted & !x.options.isHidden);
-                            MaxPageCount = (Images.Count() - 1) / PageSize + 1;
-                        });
-                    }
-                    else
-                    {
-                        Private = true;
-                        GetAlbum = new GAlbum { id = 0, name = "RESTRICTED" };
-                        Images = new List<GImage>();
-                    }
+                        Images = DB.Images.Values.Where(x => x.album == GetAlbum.id & !x.options.isDeleted & !x.options.isHidden);
+                        MaxPageCount = (Images.Count() - 1) / PageSize + 1;
+                    });
                 }
                 else
                 {
@@ -347,10 +338,11 @@ else
             }
             else
             {
-                // Auth.User.IsInRole("owner")
-                if (GAlbum.isAPIOnly)
+
+                if (GAlbum.isAPIOnly && !(Auth.User.Identity.IsAuthenticated && Auth.User.IsInRole("owner")))
                 {
                     GetAlbum = new GAlbum { id = 0, name = "API Only" };
+                        APIOnly = GetAlbum.isAPIOnly;
                     Images = new List<GImage>();
                 }
                 else

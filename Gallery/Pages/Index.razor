@@ -19,10 +19,8 @@
     <div class="mat-layout-grid-inner">
         @if (Albums != null)
         {
-        @foreach (GAlbum a in Albums.OrderBy(x => x.name))
+        @foreach (GAlbum a in Albums)
         {
-            if (!a.isPublic && a.owner != Session.State.User.GetId())
-                continue;
         <div class="mat-layout-grid-cell">
             <MatCard class="demo-mat-card">
                 <MatRipple>
@@ -77,9 +75,6 @@
 
     protected override void OnInitialized()
     {
-        if (Session.Nsfw)
-            Albums = DB.Albums.Values.Where(x => x.subAlbum == 0).ToList();
-        else
-            Albums = DB.Albums.Values.Where(x => !x.isNsfw && x.subAlbum == 0).ToList();
+            Albums = DB.Albums.Values.Where(x => x.subAlbum == 0 && x.HasAccess(Session)).OrderBy(x => x.name).ToList();
     }
 }

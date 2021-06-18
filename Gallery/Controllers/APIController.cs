@@ -44,22 +44,19 @@ namespace Gallery.Controllers
         [HttpGet("/api/album/{id}")]
         public IActionResult GetAlbum(int id)
         {
-            
+            if (!DB.Keys.TryGetValue(Request.Headers["Authorization"][0], out ApiUser User))
+            {
+                return Unauthorized();
+                
+            }
             if (!DB.Albums.TryGetValue(id, out GAlbum album))
                 return BadRequest("Unknown album");
 
-            if (DB.Keys.TryGetValue(Request.Headers["Authorization"][0], out ApiUser User))
-            {
-                if (!album.isPublic && User.ID != album.owner)
-                    return BadRequest("This album is private");
-            }
-            else
-            {
-                if (!album.isPublic)
-                    return BadRequest("This album is private");
-            }
+            if (!album.isPublic && !album.HasAccess(User.ID, true))
+                return BadRequest("This album is private");
+
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == id);
-            int ID = Program.rng.Next(0, List.Count() - 1);
+            int ID = Program.RNGBetween(0, List.Count() - 1);
             string File = List.ElementAt(ID).GetImage(imageType.Full);
             return Ok(new ApiImage { file = File });
         }
@@ -71,7 +68,7 @@ namespace Gallery.Controllers
                 return BadRequest("Unknown Tag");
 
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.tags.Contains(id) && x.file.type != "gif");
-            int ID = Program.rng.Next(0, List.Count() - 1);
+            int ID = Program.RNGBetween(0, List.Count() - 1);
             string File = List.ElementAt(ID).GetImage(imageType.Full);
             return Ok(new ApiImage { file = File });
         }
@@ -137,7 +134,7 @@ namespace Gallery.Controllers
             if (Album != 0)
             {
                 IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == Album);
-                int ID = Program.rng.Next(0, List.Count() - 1);
+                int ID = Program.RNGBetween(0, List.Count() - 1);
                 string File = List.ElementAt(ID).GetImage(imageType.Full);
                 return Ok(new ApiImage { file = File });
             }
@@ -148,7 +145,7 @@ namespace Gallery.Controllers
         public IActionResult GetSfwAnime()
         {
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 5);
-            int ID = Program.rng.Next(0, List.Count() - 1);
+            int ID = Program.RNGBetween(0, List.Count() - 1);
             string File = List.ElementAt(ID).GetImage(imageType.Full);
             return Ok(new ApiImage { file = File });
         }
@@ -157,7 +154,7 @@ namespace Gallery.Controllers
         public IActionResult GetSfwWallpaper()
         {
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 6);
-            int ID = Program.rng.Next(0, List.Count() - 1);
+            int ID = Program.RNGBetween(0, List.Count() - 1);
             string File = List.ElementAt(ID).GetImage(imageType.Full);
             return Ok(new ApiImage { file = File });
         }
@@ -166,7 +163,7 @@ namespace Gallery.Controllers
         public IActionResult GetSfwAzurlane()
         {
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 7);
-            int ID = Program.rng.Next(0, List.Count() - 1);
+            int ID = Program.RNGBetween(0, List.Count() - 1);
             string File = List.ElementAt(ID).GetImage(imageType.Full);
             return Ok(new ApiImage { file = File });
         }
@@ -175,7 +172,7 @@ namespace Gallery.Controllers
         public IActionResult GetSfwNekopara()
         {
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 8);
-            int ID = Program.rng.Next(0, List.Count() - 1);
+            int ID = Program.RNGBetween(0, List.Count() - 1);
             string File = List.ElementAt(ID).GetImage(imageType.Full);
             return Ok(new ApiImage { file = File });
         }
@@ -184,7 +181,7 @@ namespace Gallery.Controllers
         public IActionResult GetNsfwAzurlane()
         {
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 11);
-            int ID = Program.rng.Next(0, List.Count() - 1);
+            int ID = Program.RNGBetween(0, List.Count() - 1);
             string File = List.ElementAt(ID).GetImage(imageType.Full);
             return Ok(new ApiImage { file = File });
         }
@@ -193,7 +190,7 @@ namespace Gallery.Controllers
         public IActionResult GetNsfwNekopara()
         {
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 10);
-            int ID = Program.rng.Next(0, List.Count() - 1);
+            int ID = Program.RNGBetween(0, List.Count() - 1);
             string File = List.ElementAt(ID).GetImage(imageType.Full);
             return Ok(new ApiImage { file = File });
         }
@@ -202,16 +199,30 @@ namespace Gallery.Controllers
         public IActionResult GetNsfwLewd()
         {
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 12);
-            int ID = Program.rng.Next(0, List.Count() - 1);
+            int ID = Program.RNGBetween(0, List.Count() - 1);
             string File = List.ElementAt(ID).GetImage(imageType.Full);
             return Ok(new ApiImage { file = File });
         }
 
         [HttpGet("/api/upload/url")]
-        public async Task<IActionResult> UploadUrl(string url)
+        public async Task<IActionResult> UploadUrl(string url, string album = "19")
         {
-            if (!DB.Keys.TryGetValue(Request.Headers["Authorization"][0], out ApiUser User) || !User.Owner)
+            if (!DB.Keys.TryGetValue(Request.Headers["Authorization"][0], out ApiUser User))
                 return Unauthorized();
+            if (!int.TryParse(album, out int albumid) || !DB.Albums.TryGetValue(albumid, out GAlbum GA))
+                return BadRequest("Invalid album id");
+            if (User.ID != "190590364871032834")
+            {
+                if (GA.owner == User.ID)
+                { }
+                else if (GA.access.TryGetValue(User.ID, out GAlbum.GalleryAccess access))
+                {
+                    if (access == GAlbum.GalleryAccess.Read || access == GAlbum.GalleryAccess.ReadAPI)
+                        return Unauthorized();
+                }
+                else
+                    return Unauthorized();
+            }
 
             if (string.IsNullOrEmpty(url) || !url.StartsWith("https://"))
                 return BadRequest();
@@ -247,6 +258,7 @@ namespace Gallery.Controllers
                 string Hash = Program.getMd5Hash(Bytes);
             if (DB.HashSet.ContainsKey(Hash))
                 return CustomStatus(409, "Already exist.");
+
             string ID = Program.Gen.CreateId().ToString();
             DB.HashSet.Add(Hash, ID);
            
@@ -275,7 +287,7 @@ namespace Gallery.Controllers
                     size = Bytes.Length,
                     type = FormatName
                 },
-                album = 19
+                album = albumid
             };
             DB.Images.Add(ID, img);
             img.Add();
