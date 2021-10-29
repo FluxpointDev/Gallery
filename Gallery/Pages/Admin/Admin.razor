@@ -1,39 +1,322 @@
 ﻿@page "/admin"
+@page "/upload"
 @using Gallery.Database
 @using ImageMagick
 @using Gallery.Data
 @using System.IO
 @using MatBlazor
-@attribute [Authorize(Roles = "owner, admin")]
 @inject IMatToaster Toaster
+@attribute [Authorize]
 
-<title>Admin</title>
-<h3>Welcome to the admin page!</h3>
+@if (DB.GalleryUsers[Session.State.User.GetId()].upload.enabled)
+{
+<MatTabGroup @bind-ActiveIndex="@tabIndex">
+    <MatTab Label="Main">
+        <div class="section">
+            <h3><span class="iconify" data-icon="mdi:database" data-inline="false" style="color: #fff;"></span> Database</h3>
+            <div class="section-list">
+                <div class="mat-layout-grid">
+                    <div class="mat-layout-grid-inner">
+                        <div class="mat-layout-grid-cell">
+                            <h5>Images: @DB.Images.Count</h5>
+                        </div>
+                        <div class="mat-layout-grid-cell">
+                            <h5>Albums: @DB.Albums.Count</h5>
+                        </div>
+                        <div class="mat-layout-grid-cell">
+                            <h5>Tags: @DB.Tags.Count</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <AuthorizeView Roles="owner">
+                <br />
+                <div class="section-list">
+                    <MatButton OnClick="@(() => ReloadAction("tags"))" Unelevated="true" Icon="label">Reload Tags</MatButton>
+                    <MatButton OnClick="@(() => ReloadAction("images"))" Unelevated="true" Icon="image">Reload Images</MatButton>
+                    <MatButton OnClick="@(() => ReloadAction("albums"))" Unelevated="true" Icon="view_comfy">Reload Albums</MatButton>
+                    <MatButton OnClick="@(() => ReloadAction("metadata"))" Unelevated="true" Icon="not_listed_location">Reload Metadata</MatButton>
+                    <MatButton OnClick="@(() => ReloadAction("users"))" Unelevated="true" Icon="person_pin">Reload Users</MatButton>
+                    <MatButton OnClick="@(() => ReloadAction("api"))" Unelevated="true" Icon="vpn_key">Reload API Keys</MatButton>
+                </div>
+            </AuthorizeView>
+        </div>
+        <div class="section">
+            <h3><span class="iconify" data-icon="mdi:image-multiple" data-inline="false" style="color: #fff;"></span> Images</h3>
+            <div class="section-list">
+                <div class="section-item section-color-add" @onclick="@(() => GoTo(1))">
+                    <h5>Upload</h5>
+                    <span class="iconify" data-icon="mdi:cloud-upload" data-inline="false" style="color: #fff;"></span>
+                </div>
+                <div class="section-item section-color-edit" @onclick="@(() => GoTo(2))">
+                    <h5>Manage</h5>
+                    <span class="iconify" data-icon="mdi:image-edit" data-inline="false" style="color: #fff;"></span>
+                </div>
+                <div class="section-item section-color-delete" @onclick="@(() => GoTo(3))">
+                    <h5>Delete</h5>
+                    <span class="iconify" data-icon="mdi:image-remove" data-inline="false" style="color: #fff;"></span>
+                </div>
+                <div class="section-item section-color-misc" @onclick="@TestClick">
+                    <h5>Regen Thumbnails</h5>
+                </div>
+                <div class="section-item section-color-misc" @onclick="@CheckImages">
+                    <h5>Check Images</h5>
+                </div>
+            </div>
+        </div>
+        <div class="section">
+            <h3><span class="iconify" data-icon="mdi:folder-multiple-image" data-inline="false" style="color: #fff;"></span> Albums</h3>
+            <div class="section-list">
+                <div class="section-item section-color-add" @onclick="@(() => GoTo(4))">
+                    <h5>Create</h5>
+                    <span class="iconify" data-icon="mdi:folder-plus" data-inline="false" style="color: #fff;"></span>
+                </div>
+                <div class="section-item section-color-edit" @onclick="@(() => GoTo(5))">
+                    <h5>Manage</h5>
+                    <span class="iconify" data-icon="mdi:folder-edit" data-inline="false" style="color: #fff;"></span>
+                </div>
+                <div class="section-item section-color-delete" @onclick="@(() => GoTo(6))">
+                    <h5>Delete</h5>
+                    <span class="iconify" data-icon="mdi:folder-remove" data-inline="false" style="color: #fff;"></span>
+                </div>
+                <div class="section-item section-color-misc" @onclick="@MigrateTags">
+                    <h5>Migrate Tags</h5>
+                </div>
+            </div>
+        </div>
+        <div class="section">
+            <h3><span class="iconify" data-icon="mdi:label-multiple" data-inline="false" style="color: #fff;"></span> Tags</h3>
+            <div class="section-list">
+                <div class="section-item section-color-add" @onclick="@(() => GoTo(7))">
+                    <h5>Create</h5>
+                    <span class="iconify" data-icon="mdi:tag-plus" data-inline="false" style="color: #fff;"></span>
+                </div>
+                <div class="section-item section-color-edit" @onclick="@(() => GoTo(8))">
+                    <h5>Manage</h5>
+                    <span class="iconify" data-icon="mdi:tag-text" data-inline="false" style="color: #fff;"></span>
+                </div>
+                <div class="section-item section-color-delete" @onclick="@(() => GoTo(9))">
+                    <h5>Delete</h5>
+                    <span class="iconify" data-icon="mdi:tag-remove" data-inline="false" style="color: #fff;"></span>
+                </div>
+            </div>
+        </div>
+    </MatTab>
+    <MatTab Label="Image Upload 1">
+        <div class="section-header">
+            <div class="section-back" @onclick="@(() => GoTo(0))">
+                <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+            </div>
+            <h2>Image Upload</h2>
+        </div>
+        <UploadSection></UploadSection>
+    </MatTab>
+    <MatTab Label="Image Manage 2">
+        <div class="section-header">
+            <div class="section-back" @onclick="@(() => GoTo(0))">
+                <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+            </div>
+            <h2>Manage Images</h2>
+        </div>
+        <AuthorizeView Roles="owner">
+            <ImagesManageSection></ImagesManageSection>
+        </AuthorizeView>
+    </MatTab>
+    <MatTab Label="Image Delete 3">
+        <div class="section-header">
+            <div class="section-back" @onclick="@(() => GoTo(0))">
+                <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+            </div>
+            <h2>Image Delete</h2>
+        </div>
+        <MatTextField @bind-Value="@Image" Label="Standard"></MatTextField>
+        <button @onclick="@DeleteImage">Delete image</button>
+    </MatTab>
+    <MatTab Label="Album Create 4">
+        <div class="section-header">
+            <div class="section-back" @onclick="@(() => GoTo(0))">
+                <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+            </div>
+            <h2>Album Create</h2>
+        </div>
+    </MatTab>
+    <MatTab Label="Album Manage 5">
+        <div class="section-header">
+            <div class="section-back" @onclick="@(() => GoTo(0))">
+                <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+            </div>
+            <h2>Album Manage</h2>
+        </div>
+    </MatTab>
+    <MatTab Label="Album Delete 6">
+        <div class="section-header">
+            <div class="section-back" @onclick="@(() => GoTo(0))">
+                <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+            </div>
+            <h2>Album Delete</h2>
+        </div>
+    </MatTab>
+    <MatTab Label="Create Tag 7">
+        <div class="section-header">
+            <div class="section-back" @onclick="@(() => GoTo(0))">
+                <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+            </div>
+            <h2>Create Tag</h2>
+        </div>
+        <AuthorizeView Roles="owner">
+            <MatTextField @bind-Value="@NewTag" Label="Standard"></MatTextField>
+            <button @onclick="@AddTag">Add Tag</button>
+        </AuthorizeView>
+    </MatTab>
+    <MatTab Label="Manage Tags 8">
+        <div class="section-header">
+            <div class="section-back" @onclick="@(() => GoTo(0))">
+                <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+            </div>
+            <h2>Tags Manage</h2>
+        </div>
+    </MatTab>
+    <MatTab Label="Delete Tag 9">
+        <div class="section-header">
+            <div class="section-back" @onclick="@(() => GoTo(0))">
+                <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+            </div>
+            <h2>Delete Tag</h2>
+        </div>
+    </MatTab>
+</MatTabGroup>
+}
 
-<h5>Albums: @DB.Albums.Count</h5>
-<h5>Images: @DB.Images.Count</h5>
-<h5>Tags: @DB.Tags.Count</h5>
-<AuthorizeView Roles="owner">
-    <button @onclick="TestClick">Regen thumbnails</button>
-    <MatTextField @bind-Value="@Image" Label="Standard"></MatTextField>
-    <button @onclick="@DeleteImage">Delete image</button>
-    <br />
-    <MatTextField @bind-Value="@NewTag" Label="Standard"></MatTextField>
-    <button @onclick="@AddTag">Add Tag</button>
-    <br />
-    <button @onclick="@MigrateTags">Migrate Tags</button>
-    <br />
-    <br />
-    <br />
-    <h3>Database</h3>
-    <br />
-    <MatButton OnClick="@(() => ReloadAction("tags"))" Unelevated="true" Icon="label">Reload Tags</MatButton>
-    <MatButton OnClick="@(() => ReloadAction("images"))" Unelevated="true" Icon="image">Reload Images</MatButton>
-    <MatButton OnClick="@(() => ReloadAction("albums"))" Unelevated="true" Icon="view_comfy">Reload Albums</MatButton>
-    <MatButton OnClick="@(() => ReloadAction("metadata"))" Unelevated="true" Icon="not_listed_location">Reload Metadata</MatButton>
-    <MatButton OnClick="@(() => ReloadAction("users"))" Unelevated="true" Icon="person_pin">Reload Users</MatButton>
-    <MatButton OnClick="@(() => ReloadAction("api"))" Unelevated="true" Icon="vpn_key">Reload API Keys</MatButton>
-</AuthorizeView>
+<style>
+    .mdc-tab-bar {
+        display: none;
+    }
+
+    .section {
+        background-color: #303336;
+        padding: 6px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
+
+    .section-list {
+        padding-left: 16px;
+    }
+
+    .section h3 {
+        padding-left: 8px;
+        margin-bottom: 10px;
+    }
+
+    .section-item {
+        cursor: pointer;
+        width: 110px;
+        height: 110px;
+        border-radius: 16px;
+        background-color: #33383c;
+        display: inline-block;
+        text-align: center;
+        margin-right: 5px;
+    }
+
+        .section-item h5 {
+            margin-top: 26px;
+        }
+
+    .section-color-misc {
+        padding-top: 12px !important;
+    }
+
+        .section-color-misc h5 {
+            margin-top: 26px;
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+
+    .section-item .iconify {
+        width: 30px;
+        height: 30px;
+        vertical-align: middle;
+    }
+
+    .section .mdc-button {
+        background-color: #1b6ec2;
+    }
+
+        .section .mdc-button:hover {
+            background-color: #1861ac;
+        }
+
+    .section-color-add {
+        background-color: #239f55;
+    }
+
+        .section-color-add:hover {
+            background-color: #1e8a4a;
+        }
+
+    .section-color-edit {
+        background-color: #d5a838;
+    }
+
+        .section-color-edit:hover {
+            background-color: #c99c2a;
+        }
+
+    .section-color-delete {
+        background-color: #c03636;
+    }
+
+        .section-color-delete:hover {
+            background-color: #ac3030;
+        }
+
+    .section-color-misc {
+        background-color: #3f6791;
+    }
+
+        .section-color-misc:hover {
+            background-color: #375a7f;
+        }
+
+    .section-back {
+        cursor: pointer;
+        width: 50px;
+        height: 50px;
+        border-radius: 16px;
+        background-color: #1b6ec2;
+        display: inline-block;
+        text-align: center;
+        margin-right: 15px;
+        margin-bottom: 10px;
+    }
+
+        .section-back:hover {
+            background-color: #1861ac;
+        }
+
+        .section-back .iconify {
+            width: 30px;
+            height: 30px;
+            vertical-align: middle;
+            margin-top: 10px;
+        }
+
+    .section-header {
+        margin-bottom: 15px;
+    }
+
+        .section-header h2 {
+            vertical-align: middle;
+            display: inline;
+            padding-top: 10px;
+        }
+</style>
+
+
+
 
 
 
@@ -41,9 +324,24 @@
     public string Image = "";
     public string NewTag = "";
 
+    public int tabIndex = 0;
+
+    public void GoTo(int page)
+    {
+        tabIndex = page;
+    }
+
+    [CascadingParameter]
+    private Session Session { get; set; }
+
     public void MigrateTags()
     {
-         ShowToast("Running migration");
+        if (Session.State.User.GetId() != "190590364871032834")
+        {
+            ShowToast("You do not have access");
+            return;
+        }
+        ShowToast("Running migration");
         foreach(GImage i in DB.Images.Values)
         {
             switch (i.album)
@@ -57,7 +355,7 @@
                         catch {}
                         i.Update();
                     }
-                break;
+                    break;
                 case 1:
                     {
                         try
@@ -67,7 +365,7 @@
                         catch {}
                         i.Update();
                     }
-                break;
+                    break;
                 case 8:
                     {
                         try
@@ -82,7 +380,7 @@
                         catch {}
                         i.Update();
                     }
-                break;
+                    break;
             }
         }
         ShowToast("Migrated tags data");
@@ -91,19 +389,34 @@
     public void AddTag()
     {
         int id = DB.Tags.Values.OrderByDescending(x => x.id).First().id + 1;
-         GTag newtag = new GTag()
-         {
-             id = id,
-             name = NewTag
-         };
-         DB.Tags.Add(id, newtag);
+        GTag newtag = new GTag()
+        {
+            id = id,
+            name = NewTag
+        };
+        DB.Tags.Add(id, newtag);
         newtag.Add();
+        ShowToast("Tag added", true);
     }
 
     void DeleteImage()
     {
         if (DB.Images.TryGetValue(Image, out GImage Img))
         {
+            DB.Albums.TryGetValue(Img.album, out GAlbum album);
+            if (Session.State.User.GetId() != "190590364871032834")
+            {
+                if (album == null)
+                {
+                    ShowToast("Image does not have an album");
+                    return;
+                }
+                if (!(album.owner == Session.State.User.GetId() || album.access.ContainsKey(Session.State.User.GetId())))
+                {
+                    ShowToast("You do not have access to this image");
+                    return;
+                }
+            }
             DB.R.Db(Program.DatabaseName).Table("Images").Get(Img.id).Delete().RunNoReply(DB.Con);
 
             if (File.Exists(Img.GetFile(imageType.Full)))
@@ -112,30 +425,58 @@
             if (File.Exists(Img.GetFile(imageType.Medium)))
                 File.Delete(Img.GetFile(imageType.Medium));
 
-            if (File.Exists(Img.GetFile(imageType.Thumbnail)))
-                File.Delete(Img.GetFile(imageType.Thumbnail));
-
-            //DB.HashSet.Remove(Img.file.hash);
+            if (DB.Images.Values.Where(x => x.file.hash == Img.file.hash).Count() == 1)
+                DB.HashSet.Remove(Img.file.hash);
             DB.Images.Remove(Image);
+            Image = "";
+            ShowToast("Image deleted", true);
         }
     }
 
     void TestClick()
     {
-        foreach(GImage i in DB.Images.Values)
+        if (Session.State.User.GetId() != "190590364871032834")
         {
+            ShowToast("You do not have access");
+            return;
+        }
+        ShowToast("Thumbnails being regended");
+        MagickReadSettings ReadSettings = new MagickReadSettings { ColorType = ColorType.Optimize, FrameCount = 1, FrameIndex = 0 };
+        foreach (GImage i in DB.Images.Values)
+        {
+            if (File.Exists(i.GetFile(imageType.Medium)))
+                continue;
+            Console.WriteLine("REGEN: " + i.GetFile(imageType.Medium));
             using (FileStream fi = File.OpenRead(i.GetFile(imageType.Full)))
             {
-                using (MagickImage image = new MagickImage(fi, new MagickReadSettings { ColorType = ColorType.Optimize }))
+                using (MagickImage image = new MagickImage(fi, ReadSettings))
                 {
                     image.Resize(792, 594);
-                    image.Write(i.GetFile(imageType.Medium));
-                    image.Resize(320, 320);
-                    image.Write(i.GetFile(imageType.Thumbnail));
+                    image.Write(i.GetFile(imageType.Medium), MagickFormat.WebP);
+                    //image.Resize(320, 320);
+                    //image.Write(i.GetFile(imageType.Thumbnail));
                 }
             }
         }
-        Console.WriteLine("DONE");
+        ShowToast("Thumbnails done!", true);
+    }
+
+    void CheckImages()
+    {
+        if (Session.State.User.GetId() != "190590364871032834")
+        {
+            ShowToast("You do not have access");
+            return;
+        }
+         ShowToast("Checking images", true);
+        foreach (GImage i in DB.Images.Values)
+        {
+            if (!File.Exists(i.GetFile(imageType.Full)))
+            {
+                 ShowToast("Missing " + i.id, true);
+            }
+        }
+         ShowToast("Checking done!", true);
     }
 
     public void ReloadAction(string type)
@@ -145,30 +486,31 @@
             case "tags":
                 DB.ReloadTags();
                 break;
-                case "albums":
+            case "albums":
                 DB.ReloadAlbums();
                 break;
-                case "images":
+            case "images":
                 DB.ReloadImages();
                 break;
-                case "metadata":
+            case "metadata":
                 DB.ReloadMetaData();
                 break;
-                case "users":
+            case "users":
                 DB.ReloadUsers();
                 break;
-                case "api":
+            case "api":
                 DB.ReloadAPIKeys();
                 break;
         }
         ShowToast("Reloaded " + type);
     }
 
-    public void ShowToast(string desc)
+    public void ShowToast(string desc, bool force = false)
     {
         Toaster.Add(desc, MatToastType.Success, "", "", config =>
         {
-            config.ShowCloseButton = false;
+            config.RequireInteraction = force;
+            config.ShowCloseButton = force;
             config.ShowProgressBar = true;
             config.MaximumOpacity = Convert.ToInt32(100);
 
@@ -178,5 +520,5 @@
 
         });
     }
-        
+
 }

@@ -17,6 +17,9 @@ using BlazorContextMenu;
 using Blazored.Modal;
 using Microsoft.AspNetCore.Components;
 using MatBlazor;
+using ImageMagick;
+using System.IO;
+using RethinkDb.Driver.Model;
 
 namespace Gallery
 {
@@ -135,6 +138,27 @@ namespace Gallery
                 RethinkUpdaterService RU = app.ApplicationServices.GetService<RethinkUpdaterService>();
                 RU.Start();
             }
+            _ = Task.Run(() =>
+            {
+                foreach(var i in System.IO.Directory.GetFiles(Config.GlobalPath + "med/"))
+                {
+                    if (!i.EndsWith(".webp"))
+                    {
+                        Console.WriteLine("Converted: " + i);
+                        string Split = i.Split('/').Last();
+                        MagickFormat Format = MagickFormat.Png;
+                        if (Split.EndsWith(".jpg") || Split.EndsWith(".jpeg"))
+                            Format = MagickFormat.Jpg;
+                        using (MagickImage image = new MagickImage(new MemoryStream(File.ReadAllBytes(i)), new MagickReadSettings { ColorType = ColorType.Optimize, Format = Format }))
+                        {
+                            image.Strip();
+                            image.Resize(792, 594);
+                            image.Write(Config.GlobalPath + "med/" + Split.Split('.').First() + ".webp", MagickFormat.WebP);
+                        }
+                        System.IO.File.Delete(i);
+                    }
+                }
+            });
             app.UseResponseCompression();
             app.UseForwardedHeaders(new ForwardedHeadersOptions
             {

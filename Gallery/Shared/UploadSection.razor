@@ -1,0 +1,358 @@
+﻿@attribute [Authorize]
+@using System.IO;
+@using Blazor.FileReader
+@using ImageMagick
+@inject IFileReaderService fileReaderService
+@using MatBlazor
+@using Gallery.Data
+@using Gallery.Database
+@inject AuthenticationStateProvider Authentication
+
+@if (!hasUploadAccess)
+{
+    <center>
+        <h3>No Upload Access</h3>
+        <p>You do not have permission to upload images.</p>
+    </center>
+}
+else
+{
+    <h3>Album</h3>
+    <MatAutocompleteList Items="@Albums" TValue="GAlbum" TItem="GAlbum" ShowClearButton="true" Label="Select an album" CustomStringSelector="@(i => NullValue(i))" @bind-Value="@Album">
+        <ItemTemplate>
+            <div style="display: flex; flex-direction: row; width: 100%;">
+                <div style="flex: 1;">@context.GetComboxName()</div>
+            </div>
+        </ItemTemplate>
+    </MatAutocompleteList>
+    <br />
+    
+        <MatAutocompleteList Items="@DB.Tags.Values" TValue="GTag" TItem="GTag" ShowClearButton="true" Label="Select a tag" CustomStringSelector="@(i => NullValue(i))" @bind-Value="@Tag">
+            <ItemTemplate>
+                <div style="display: flex; flex-direction: row; width: 100%;">
+                    <div style="flex: 1;">@context.name</div>
+                </div>
+            </ItemTemplate>
+        </MatAutocompleteList>
+        <br />
+        <br />
+        <div class="@DropClass"
+             @ref=dropTargetElement
+             @ondrop=OnDrop
+             @ondragenter=OnDragEnter
+             @ondragleave=OnDragLeave>
+            Drop Files here.
+        </div>
+        <br />
+
+        @if (status == UploadStatus.Uploading)
+        {
+            <h3 class="mat-subtitle1">Uploading - @uploadCount/@maxCount</h3>
+            <MatProgressBar Indeterminate="true"></MatProgressBar>
+            <br />
+        }
+        else if (status == UploadStatus.Done)
+        {
+            <h3 class="mat-subtitle1">Upload done</h3>
+            <MatProgressBar Progress="1.0"></MatProgressBar>
+            <br />
+        }
+        @if (FileList.Count != 0)
+        {
+            <MatTable Items="@FileList" class="mat-elevation-z5">
+                <MatTableHeader>
+                    <th>Status</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Size</th>
+                    <th>Upload</th>
+                </MatTableHeader>
+                <MatTableRow>
+                    @if (context.Status == GFileInfo.FileStatus.Pending)
+                            {
+                        <td></td>
+                            }
+                            else if (context.Status == GFileInfo.FileStatus.Ok)
+                            {
+                        <td><span class="oi oi-thumb-up"></span></td>
+                            }
+                            else
+                            {
+                        <td><span class="oi oi-x"></span></td>
+                            }
+                    <td>@context.Name</td>
+                    <td>@context.Type</td>
+                    <td>@context.Size</td>
+                    <td>@context.GetStatusText()</td>
+                </MatTableRow>
+            </MatTable>
+            <br />
+        }
+        @if (Album != null)
+        {
+            <button @onclick="ReadFile" disabled="@uploadDisabled" class="btn btn-primary">Upload images</button>
+        }
+
+        <style>
+            .dropTargetClass {
+                display: block;
+                padding: 20px;
+                margin-bottom: 10px;
+                border: 1px dashed black;
+                border-radius: 5px;
+            }
+
+            .dropTargetDragClass {
+                border-color: orangered;
+                font-weight: bold;
+            }
+
+            .oi-thumb-up {
+                color: rgb(37,214,37);
+            }
+
+            .oi-x {
+                color: rgb(242,62,62);
+            }
+
+            .mdc-icon-button .material-icons {
+                color: black;
+            }
+
+            th {
+                color: white !important;
+            }
+
+            .mdc-paginator-container {
+                color: white !important;
+            }
+
+            .droptarget {
+                padding: 10px;
+                padding-top: 20px;
+                padding-bottom: 20px;
+                background-color: #292d32;
+                border: 1px solid #343a40;
+                border-radius: 16px;
+            }
+
+            .droptarget-drag {
+                border: 1px solid #239f55;
+                color: #239f55;
+                background-color: #343a40;
+            }
+        </style>
+        }
+
+        @code {
+            ElementReference dropTargetElement;
+            IFileReaderRef dropReference;
+            bool hasUploadAccess = false;
+            const string dropTargetDragClass = "droptarget-drag";
+            const string dropTargetClass = "droptarget";
+    private List<string> _dropClasses = new List<string>() { dropTargetClass };
+
+        string DropClass => string.Join(" ", _dropClasses);
+
+
+        public bool uploadDisabled = false;
+
+        public UploadStatus status = UploadStatus.None;
+        public int maxCount = 0;
+        public int uploadCount = 0;
+        public enum UploadStatus
+        {
+            None, Uploading, Done
+        }
+
+        public string NullValue(GTag tag)
+        {
+            return tag == null ? "" : tag.name;
+        }
+
+        public string NullValue(GAlbum album)
+        {
+            return album == null ? "" : album.GetComboxName();
+        }
+
+        GAlbum Album = null;
+        GTag Tag = null;
+        public void Changed()
+        {
+
+        }
+
+        [CascadingParameter]
+        private Session Session { get; set; }
+
+        GAlbum[] Albums = new GAlbum[0];
+
+        List<GFileInfo> FileList { get; } = new List<GFileInfo>();
+
+        protected override async Task OnInitializedAsync()
+        {
+            DB.GalleryUsers.TryGetValue(Session.State.User.GetId(), out GUser User);
+            if (Session.State.User.GetId() == "190590364871032834")
+            {
+                hasUploadAccess = true;
+                Albums = DB.Albums.Values.ToArray();
+            }
+            else
+            {
+                hasUploadAccess = true;
+                Albums = DB.Albums.Values.Where(x => x.owner == User.id || (x.access.TryGetValue(User.id, out GAlbum.GalleryAccess access) && access == GAlbum.GalleryAccess.Manage || access == GAlbum.GalleryAccess.Upload)).ToArray();
+            }
+        }
+
+        protected override async Task OnAfterRenderAsync(bool isFirstRender)
+        {
+            if (hasUploadAccess && dropReference == null)
+            {
+                dropReference = fileReaderService.CreateReference(dropTargetElement);
+                await dropReference.RegisterDropEventsAsync(true);
+            }
+        }
+
+        public void OnDragEnter(EventArgs e)
+        {
+            _dropClasses.Add(dropTargetDragClass);
+        }
+
+        public void OnDragLeave(EventArgs e)
+        {
+            _dropClasses.Remove(dropTargetDragClass);
+        }
+
+        public async Task OnDrop(EventArgs e)
+        {
+            _dropClasses.Remove(dropTargetDragClass);
+            await this.RefreshFileList();
+        }
+
+        private async Task RefreshFileList()
+        {
+            uploadDisabled = true;
+            this.FileList.Clear();
+            foreach (var file in await dropReference.EnumerateFilesAsync())
+            {
+                var fileInfo = await file.ReadFileInfoAsync();
+                GFileInfo Info = new GFileInfo(fileInfo);
+                if (Info.Status == GFileInfo.FileStatus.InvalidSize || Info.Status == GFileInfo.FileStatus.InvalidType)
+                    continue;
+                this.FileList.Add(Info);
+            }
+            uploadDisabled = false;
+            this.StateHasChanged();
+        }
+
+        public async Task ReadFile()
+        {
+            uploadDisabled = true;
+            status = UploadStatus.Uploading;
+            maxCount = FileList.Count;
+            FileList.Clear();
+            var Auth = await Authentication.GetAuthenticationStateAsync();
+            foreach (var file in await dropReference.EnumerateFilesAsync())
+            {
+                GFileInfo fileInfo = new GFileInfo(await file.ReadFileInfoAsync());
+                if (fileInfo.Status != GFileInfo.FileStatus.Pending)
+                {
+                    maxCount--;
+                    FileList.Add(fileInfo);
+                    this.StateHasChanged();
+                    continue;
+                }
+                try
+                {
+                    MemoryStream Stream = await file.CreateMemoryStreamAsync();
+                    var Bytes = Stream.ToArray();
+                    string Hash = Program.getMd5Hash(Bytes);
+                    if (DB.HashSet.ContainsKey(Hash))
+                    {
+                        fileInfo.Status = GFileInfo.FileStatus.Duplicate;
+                        maxCount--;
+                    }
+                    else
+                    {
+                        string ID = Program.Gen.CreateId().ToString();
+                        DB.HashSet.Add(Hash, ID);
+                        fileInfo.Status = GFileInfo.FileStatus.Ok;
+                        _ = Task.Run(() =>
+                        {
+                            MagickFormat Format = MagickFormat.Jpg;
+                            switch (fileInfo.Type)
+                            {
+                                case "png":
+                                    Format = MagickFormat.Png;
+                                    break;
+                                case "gif":
+                                    Format = MagickFormat.Gif;
+                                    using (FileStream files = new FileStream(Config.GlobalPath + "img/" + ID + "." + fileInfo.Type, FileMode.Create, FileAccess.Write))
+                                    {
+                                        files.Write(Bytes);
+                                    }
+                                    break;
+                            }
+                            int height = 0;
+                            int width = 0;
+                            MagickReadSettings ImageSettings = new MagickReadSettings { ColorType = ColorType.Optimize, Format = Format };
+                            if (Format == MagickFormat.Gif)
+                            {
+                                ImageSettings.FrameCount = 1;
+                                ImageSettings.FrameIndex = 0;
+                            }
+                            using (MagickImage image = new MagickImage(Bytes, ImageSettings))
+                            {
+                                image.Strip();
+                                height = image.Height;
+                                width = image.Width;
+                                if (Format != MagickFormat.Gif)
+                                    image.Write(Config.GlobalPath + "img/" + ID + "." + fileInfo.Type, Format);
+                                image.Resize(792, 594);
+                                image.Write(Config.GlobalPath + "med/" + ID + ".webp", MagickFormat.WebP);
+                            //image.Resize(320, 320);
+                            //image.Write(Config.GlobalPath + "thm/" + ID + ".webp" + fileInfo.Type);
+                        }
+
+                            GImage img = new GImage
+                            {
+                                id = ID,
+                                name = fileInfo.Name.Replace("." + fileInfo.Type, "", StringComparison.OrdinalIgnoreCase),
+                                author = Auth.User.GetId(),
+                                date = DateTime.UtcNow,
+                                file = new GImage.FileInfo
+                                {
+                                    hash = Hash,
+                                    height = height,
+                                    width = width,
+                                    size = fileInfo.Size,
+                                    type = fileInfo.Type
+                                },
+                                album = Album.id
+                            };
+                            if (Tag != null)
+                            {
+                                img.tags.Add(Tag.id);
+                                if (Tag.id == 3)
+                                    img.tags.Add(2);
+                            }
+                            DB.Images.Add(ID, img);
+                            img.Add();
+                        });
+                        uploadCount++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    maxCount--;
+                    fileInfo.Status = GFileInfo.FileStatus.Exception;
+                }
+                FileList.Add(fileInfo);
+                this.StateHasChanged();
+            }
+            await dropReference.ClearValue();
+            status = UploadStatus.Done;
+            this.StateHasChanged();
+        }
+
+        }

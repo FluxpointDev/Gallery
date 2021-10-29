@@ -8,6 +8,7 @@ using System;
 using ImageMagick;
 using System.IO;
 using System.Drawing;
+using System.Linq.Dynamic.Core;
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace Gallery.Controllers
@@ -62,14 +63,16 @@ namespace Gallery.Controllers
         }
 
         [HttpGet("/api/tag/{id}")]
-        public IActionResult GetTag(int id)
+        public IActionResult GetTag(int id, string type = "all", string nsfw = "")
         {
             if (!DB.Tags.TryGetValue(id, out GTag tag))
                 return BadRequest("Unknown Tag");
-
-            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.tags.Contains(id) && x.file.type != "gif");
-            int ID = Program.RNGBetween(0, List.Count() - 1);
-            string File = List.ElementAt(ID).GetImage(imageType.Full);
+            HashSet<int> Albums = nsfw == "true" ? DB.Albums.Values.Where(x => x.isPublic && x.isNsfw).Select(x => x.id).ToHashSet() : DB.Albums.Values.Where(x => x.isPublic && !x.isNsfw).Select(x => x.id).ToHashSet();
+            GImage[] List = DB.Images.Values.Where(x => Albums.Contains(x.album) && x.tags.Contains(id) && (type == "all" || x.IsImageType(type == "gif"))).ToArray();
+            if (!List.Any())
+                return BadRequest("This tag has no images");
+            int ID = Program.RNGBetween(0, List.Length- 1);
+            string File = List[ID].GetImage(imageType.Full);
             return Ok(new ApiImage { file = File });
         }
 
@@ -204,6 +207,18 @@ namespace Gallery.Controllers
             return Ok(new ApiImage { file = File });
         }
 
+        [HttpPost("/api/upload/revolt")]
+        public async Task<IActionResult> UploadRevoltImage(string type, string folder)
+        {
+            using var buffer = new System.IO.MemoryStream();
+            await this.Request.Body.CopyToAsync(buffer, this.Request.HttpContext.RequestAborted);
+            var imageBytes = buffer.ToArray();
+            string FileName = Program.Letters[Program.RNGBetween(0, Program.Letters.Length - 1)].ToString() + Program.Letters[Program.RNGBetween(0, Program.Letters.Length - 1)].ToString() + Program.Gen.CreateId().ToString() + "." + type;
+            string FilePath = "/home/website/revolt/" + folder + "/" + FileName;
+            System.IO.File.WriteAllBytes(FilePath, imageBytes); ;
+            return Ok(new Response(200, "https://revoltimg.fluxpoint.dev/" + folder + "/" + FileName));
+        }
+
         [HttpGet("/api/upload/url")]
         public async Task<IActionResult> UploadUrl(string url, string album = "19")
         {
@@ -237,9 +252,25 @@ namespace Gallery.Controllers
             }
             if (Bytes.Length == 0)
                 return BadRequest("Invalid image");
+
             string ImageName = url.Split('/').Last().Split('.').First();
             MagickFormat Format = MagickFormat.A;
             string FormatName = url.Split('.').Last().Split('?').First().ToLower();
+            
+
+            string Hash = Program.getMd5Hash(Bytes);
+            if (album == "19")
+            {
+                if (DB.Images.Values.Any(x => x.album == 19 && x.file.hash == Hash))
+                    return CustomStatus(409, "Already exist.");
+            }
+            else
+            {
+                if (DB.HashSet.ContainsKey(Hash))
+                    return CustomStatus(409, "Already exist.");
+            }
+            string ID = Program.Gen.CreateId().ToString();
+            bool GifConvert = false;
             switch (FormatName)
             {
                 case "png":
@@ -252,26 +283,42 @@ namespace Gallery.Controllers
                 case "webp":
                     Format = MagickFormat.WebP;
                     break;
+                case "gif":
+                    Format = MagickFormat.Gif;
+                    if (album == "19")
+                    {
+                        GifConvert = true;
+                        FormatName = "png";
+                    }
+                    else
+                    {
+                        using (FileStream files = new FileStream(Config.GlobalPath + "img/" + ID + ".gif", FileMode.Create, FileAccess.Write))
+                        {
+                            files.Write(Bytes);
+                        }
+                    }
+                    break;
             }
 
-            Size Size = GetSize(Bytes);
-                string Hash = Program.getMd5Hash(Bytes);
-            if (DB.HashSet.ContainsKey(Hash))
-                return CustomStatus(409, "Already exist.");
-
-            string ID = Program.Gen.CreateId().ToString();
-            DB.HashSet.Add(Hash, ID);
-           
+            try
+            {
+                DB.HashSet.Add(Hash, ID);
+            }
+            catch { }
+            int Width = 0;
+            int Height = 0;
             using (MagickImage image = new MagickImage(new MemoryStream(Bytes), new MagickReadSettings { ColorType = ColorType.Optimize, Format = Format, FrameIndex = 0, FrameCount = 1 }))
             {
                 image.Strip();
-                if (Format != MagickFormat.Gif)
+                Width = image.Width;
+                Height = image.Height;
+                if (GifConvert || Format != MagickFormat.Gif)
                     image.Write(Config.GlobalPath + "img/" + ID + "." + FormatName, Format);
 
                 image.Resize(792, 594);
-                image.Write(Config.GlobalPath + "med/" + ID + "." + FormatName, Format);
-                image.Resize(320, 320);
-                image.Write(Config.GlobalPath + "thm/" + ID + "." + FormatName, Format);
+                image.Write(Config.GlobalPath + "med/" + ID + ".webp", Format);
+                //image.Resize(320, 320);
+                //image.Write(Config.GlobalPath + "thm/" + ID + "." + FormatName, Format);
             }
             GImage img = new GImage
             {
@@ -282,8 +329,8 @@ namespace Gallery.Controllers
                 file = new GImage.FileInfo
                 {
                     hash = Hash,
-                    height = Size.Height,
-                    width = Size.Width,
+                    height = Height,
+                    width = Width,
                     size = Bytes.Length,
                     type = FormatName
                 },
@@ -292,16 +339,6 @@ namespace Gallery.Controllers
             DB.Images.Add(ID, img);
             img.Add();
             return Ok();
-        }
-
-        public Size GetSize(byte[] bytes)
-        {
-            using (var stream = new MemoryStream(bytes))
-            {
-                var image = System.Drawing.Image.FromStream(stream);
-
-                return image.Size;
-            }
         }
     }
 }

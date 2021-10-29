@@ -1,11 +1,8 @@
-﻿@page "/admin/images"
-@using MatBlazor
+﻿@using MatBlazor
 @using Gallery.Data
 @using Gallery.Database
-@attribute [Authorize(Roles = "owner, admin")]
 @inject AuthenticationStateProvider Authentication
 
-<h3>Image Management</h3>
 <MatTextField @bind-Value="@id" Label="ID"></MatTextField>
 <MatTextField @bind-Value="@author" Label="Discord ID"></MatTextField>
 <MatTextField @bind-Value="@name" Label="Image Name"></MatTextField>
@@ -17,14 +14,14 @@
 <MatSlideToggle @bind-Value="@deleted" Label="Deleted"></MatSlideToggle>
 <br />
 <br />
-<MatAutocompleteList  Items="@Albums" TValue="GAlbum" TItem="GAlbum" ShowClearButton="true" Label="Select an album" CustomStringSelector="@(i => NullValue(i))" @bind-Value="@Album">
+<MatAutocompleteList Items="@Albums" TValue="GAlbum" TItem="GAlbum" ShowClearButton="true" Label="Select an album" CustomStringSelector="@(i => NullValue(i))" @bind-Value="@Album">
     <ItemTemplate>
         <div style="display: flex; flex-direction: row; width: 100%;">
             <div style="flex: 1;">@context.GetComboxName()</div>
         </div>
     </ItemTemplate>
 </MatAutocompleteList>
-<MatAutocompleteList  Items="@Tags" TValue="GTag" TItem="GTag" ShowClearButton="true" Label="Select a tag" CustomStringSelector="@(i => NullValue(i))" @bind-Value="@Tag">
+<MatAutocompleteList Items="@Tags" TValue="GTag" TItem="GTag" ShowClearButton="true" Label="Select a tag" CustomStringSelector="@(i => NullValue(i))" @bind-Value="@Tag">
     <ItemTemplate>
         <div style="display: flex; flex-direction: row; width: 100%;">
             <div style="flex: 1;">@context.name</div>
@@ -42,33 +39,33 @@
 <br />
 
 <div class="mat-layout-grid">
-<div class="mat-layout-grid-inner">
-                <div class="mat-layout-grid-cell mat-layout-grid-cell-span-8">
-                    <MatTable Items="@GetImagesList()" AllowSelection="true" RowClass="GImage" SelectionChanged="SelectionChangedEvent">
-    <MatTableHeader>
-         <th></th>
-        <th>Image ID</th>
-        <th>Image Name</th>
-        <th>Author</th>
-    </MatTableHeader>
-    <MatTableRow>
-        <td>@GetNumber()</td>
-        <td>@context.id</td>
-        <td>@context.name</td>
-        @if (context.author == "")
-        {
-            <td>N/A</td>
-        }
-        else if (DB.GalleryUsers.TryGetValue(context.author, out GUser user))
-        {
-            <td>@user.name (@context.author)</td>
-        }
-        else
-        {
-    <td>N/A (@context.author)</td>
-        }
-    </MatTableRow>
-</MatTable>
+    <div class="mat-layout-grid-inner">
+        <div class="mat-layout-grid-cell mat-layout-grid-cell-span-8">
+            <MatTable Items="@GetImagesList()" AllowSelection="true" RowClass="GImage" SelectionChanged="SelectionChangedEvent">
+                <MatTableHeader>
+                    <th></th>
+                    <th>Image ID</th>
+                    <th>Image Name</th>
+                    <th>Author</th>
+                </MatTableHeader>
+                <MatTableRow>
+                    <td>@GetNumber()</td>
+                    <td>@context.id</td>
+                    <td>@context.name</td>
+                    @if (context.author == "")
+                    {
+                        <td>N/A</td>
+                    }
+                    else if (DB.GalleryUsers.TryGetValue(context.author, out GUser user))
+                    {
+                        <td>@user.name (@context.author)</td>
+                    }
+                    else
+                    {
+                        <td>N/A (@context.author)</td>
+                    }
+                </MatTableRow>
+            </MatTable>
 
         </div>
         @if (SelectedId != "0")
@@ -78,13 +75,13 @@
                     <a href="@SelectedImage()" target="_blank"><img src="@SelectedImage()" /></a>
                     <p>@GetTags()</p>
                     <MatAutocompleteList Items="@Tags" TValue="GTag" TItem="GTag" ShowClearButton="true" Label="Select a tag" CustomStringSelector="@(i => NullValue(i))" @bind-Value="@SelectedTag">
-    <ItemTemplate>
-        <div style="display: flex; flex-direction: row; width: 100%;">
-            <div style="flex: 1;">@context.name</div>
-        </div>
-    </ItemTemplate>
-</MatAutocompleteList>
-<MatButton Unelevated="true" OnClick="@ToggleSelectedTag">Toggle Tag</MatButton>
+                        <ItemTemplate>
+                            <div style="display: flex; flex-direction: row; width: 100%;">
+                                <div style="flex: 1;">@context.name</div>
+                            </div>
+                        </ItemTemplate>
+                    </MatAutocompleteList>
+                    <MatButton Unelevated="true" OnClick="@ToggleSelectedTag">Toggle Tag</MatButton>
                 </div>
             </div>
         }
@@ -109,16 +106,16 @@
     }
 
     .sticky-cell {
-  
-    position: -webkit-sticky;
-  position: sticky;
-  top: 0;
-    padding: 10px;
-     min-width: 300px;
-}
-.sticky-cell img {
-    max-width: 300px !important;
-}
+        position: -webkit-sticky;
+        position: sticky;
+        top: 0;
+        padding: 10px;
+        min-width: 300px;
+    }
+
+        .sticky-cell img {
+            max-width: 300px !important;
+        }
 </style>
 
 @code {
@@ -144,7 +141,7 @@
         return tag == null ? "" : tag.name;
     }
 
-      public string NullValue(GAlbum album)
+    public string NullValue(GAlbum album)
     {
         return album == null ? "" : album.GetComboxName();
     }
@@ -152,7 +149,7 @@
     public string GetTags()
     {
         if (DB.Images.TryGetValue(SelectedId, out GImage img))
-        return img.tags.Any() ? string.Join(", ", img.GetTags().Select(x => x.name)) : "No Tags";
+            return img.tags.Any() ? string.Join(", ", img.GetTags().Select(x => x.name)) : "No Tags";
         return "";
     }
 
@@ -188,6 +185,9 @@
             DB.Albums.TryGetValue(i.album, out GAlbum album);
 
             if (album != null && Album != null && Album.id != album.id)
+                continue;
+
+            if (Tag != null && !i.tags.Any(x => x == Tag.id))
                 continue;
 
             if (AuthUser.User.GetId() != Config.OwnerID.ToString() && album != null && !album.isPublic && AuthUser.User.GetId() != album.owner)
@@ -262,7 +262,7 @@
     public string SelectedImage()
     {
         if (DB.Images.TryGetValue(SelectedId, out GImage img))
-        return img.GetImage(imageType.Thumbnail);
+            return img.GetImage(imageType.Thumbnail);
         return "";
     }
     public void ToggleSelectedTag()
@@ -273,22 +273,22 @@
                 img.tags.Remove(SelectedTag.id);
             else
                 img.tags.Add(SelectedTag.id);
-                img.Update();
+            img.Update();
         }
     }
 
     public void SelectionChangedEvent(object row)
-            {
-                 Tags = DB.Tags.Values.ToArray();
-                 NumberRow = 0;
-                if (row == null)
-                {
-                    SelectedId = "0";
-                }
-                else
-                {
-                    SelectedId = ((GImage)row).id;
-                }
-                this.StateHasChanged();
-            }
+    {
+        Tags = DB.Tags.Values.ToArray();
+        NumberRow = 0;
+        if (row == null)
+        {
+            SelectedId = "0";
+        }
+        else
+        {
+            SelectedId = ((GImage)row).id;
+        }
+        this.StateHasChanged();
+    }
 }

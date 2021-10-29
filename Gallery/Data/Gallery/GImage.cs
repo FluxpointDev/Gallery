@@ -52,9 +52,9 @@ namespace Gallery.Data
                 case imageType.Full:
                     return "https://img.fluxpoint.dev/" + id + "." + file.type;
                 case imageType.Medium:
-                    return "https://img.fluxpoint.dev/med/" + id + "." + file.type;
+                    return "https://img.fluxpoint.dev/med/" + id + ".webp";
                 case imageType.Thumbnail:
-                    return "https://img.fluxpoint.dev/thm/" + id + "." + file.type;
+                    return "https://img.fluxpoint.dev/med/" + id + ".webp";
                 case imageType.Download:
                     return "https://img.fluxpoint.dev/dl/" + id + "." + file.type;
             }
@@ -68,11 +68,18 @@ namespace Gallery.Data
                 case imageType.Full:
                     return Config.GlobalPath + "img/" + id + "." + file.type;
                 case imageType.Medium:
-                    return Config.GlobalPath + "med/" + id + "." + file.type;
+                    return Config.GlobalPath + "med/" + id + ".webp";
                 case imageType.Thumbnail:
-                    return Config.GlobalPath + "thm/" + id + "." + file.type;
+                    return Config.GlobalPath + "med/" + id + ".webp";
             }
             return "";
+        }
+
+        public bool IsImageType(bool gif)
+        {
+            if (gif)
+                return file.type == "gif";
+            return file.type != "gif";
         }
 
         public void Add()

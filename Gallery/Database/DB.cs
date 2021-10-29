@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace Gallery.Database
@@ -18,7 +19,7 @@ namespace Gallery.Database
         public static Dictionary<string, GUser> GalleryUsers = new Dictionary<string, GUser>();
         public static Dictionary<int, GAlbum> Albums = new Dictionary<int, GAlbum>();
         public static Dictionary<string, GImage> Images = new Dictionary<string, GImage>();
-        public static Dictionary<string, string> HashSet = new Dictionary<string, string>();
+        public static Dictionary<string, string> HashSet { get; set; } = new Dictionary<string, string>();
         public static Dictionary<int, GTag> Tags = new Dictionary<int, GTag>();
         public static Dictionary<string, ApiUser> Keys = new Dictionary<string, ApiUser>();
 
@@ -37,7 +38,7 @@ namespace Gallery.Database
         {
             Cursor<GImage> images = R.Db(Program.DatabaseName).Table("Images").RunCursor<GImage>(Con);
             Images = images.ToDictionary(x => x.id, x => x);
-            HashSet = Images.Values.ToDictionary(x => x.file.hash, x => x.id);
+            HashSet = Images.Values.DistinctBy(x => x.id).ToDictionary(x => x.file.hash, x => x.id);
         }
 
         public static void ReloadMetaData()
