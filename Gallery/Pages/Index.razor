@@ -3,13 +3,7 @@
 @using Gallery.Data
 @using Gallery.Database
 
-@if (true)
-{
-   <h3>Down for maintenance</h3>
-   <a href="https://discord.gg/fluxpoint">https://discord.gg/fluxpoint</a>
-}
-else
-{
+
 <AuthorizeView>
     <Authorized>
         <h1>Hello @context.User.Identity.Name!</h1>
@@ -57,7 +51,7 @@ else
         }
     </div>
 </div>
-}
+
 <style>
     .demo-mat-card {
         max-width: 320px;

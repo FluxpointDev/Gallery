@@ -38,6 +38,7 @@
                     <MatButton OnClick="@(() => ReloadAction("metadata"))" Unelevated="true" Icon="not_listed_location">Reload Metadata</MatButton>
                     <MatButton OnClick="@(() => ReloadAction("users"))" Unelevated="true" Icon="person_pin">Reload Users</MatButton>
                     <MatButton OnClick="@(() => ReloadAction("api"))" Unelevated="true" Icon="vpn_key">Reload API Keys</MatButton>
+                    <MatButton OnClick="@(() => ReloadAction("waifu"))" Unelevated="true" Icon="vpn_key">Reload Waifu Images</MatButton>
                 </div>
             </AuthorizeView>
         </div>
@@ -468,15 +469,15 @@
             ShowToast("You do not have access");
             return;
         }
-         ShowToast("Checking images", true);
+        ShowToast("Checking images", true);
         foreach (GImage i in DB.Images.Values)
         {
             if (!File.Exists(i.GetFile(imageType.Full)))
             {
-                 ShowToast("Missing " + i.id, true);
+                ShowToast("Missing " + i.id, true);
             }
         }
-         ShowToast("Checking done!", true);
+        ShowToast("Checking done!", true);
     }
 
     public void ReloadAction(string type)
@@ -500,6 +501,9 @@
                 break;
             case "api":
                 DB.ReloadAPIKeys();
+                break;
+            case "waifu":
+                DB.ReloadWaifuLewds();
                 break;
         }
         ShowToast("Reloaded " + type);

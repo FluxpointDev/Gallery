@@ -32,8 +32,12 @@ namespace Gallery.Data
         {
             if (session.State.User.GetId() == "190590364871032834")
                 return true;
-            if (isNsfw && session.Nsfw)
-                return true;
+            if (isNsfw)
+            {
+                if (session.Nsfw)
+                    return true;
+                return false;
+            }
             if (LoginOnly && !session.State.User.Identity.IsAuthenticated)
                 return false;
             return HasAccess(session.State.User.GetId());

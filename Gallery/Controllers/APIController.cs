@@ -15,11 +15,14 @@ namespace Gallery.Controllers
 {
     public class ApiImage : Response
     {
-        public ApiImage() : base(200, "")
+        public ApiImage(GImage img) : base(200, "")
         {
-
+            if (img == null)
+                return;
+            id = img.id;
+            file = img.GetImage(imageType.Full);
         }
-
+        public string id = "";
         public string file = "";
     }
 
@@ -58,8 +61,7 @@ namespace Gallery.Controllers
 
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == id);
             int ID = Program.RNGBetween(0, List.Count() - 1);
-            string File = List.ElementAt(ID).GetImage(imageType.Full);
-            return Ok(new ApiImage { file = File });
+            return Ok(new ApiImage(List.ElementAt(ID)));
         }
 
         [HttpGet("/api/tag/{id}")]
@@ -72,8 +74,7 @@ namespace Gallery.Controllers
             if (!List.Any())
                 return BadRequest("This tag has no images");
             int ID = Program.RNGBetween(0, List.Length- 1);
-            string File = List[ID].GetImage(imageType.Full);
-            return Ok(new ApiImage { file = File });
+            return Ok(new ApiImage(List[ID]));
         }
 
         [HttpGet("/api/sfw/gif/{type}")]
@@ -138,8 +139,7 @@ namespace Gallery.Controllers
             {
                 IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == Album);
                 int ID = Program.RNGBetween(0, List.Count() - 1);
-                string File = List.ElementAt(ID).GetImage(imageType.Full);
-                return Ok(new ApiImage { file = File });
+                return Ok(new ApiImage(List.ElementAt(ID)));
             }
             return BadRequest("Invalid action type.");
         }
@@ -149,8 +149,7 @@ namespace Gallery.Controllers
         {
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 5);
             int ID = Program.RNGBetween(0, List.Count() - 1);
-            string File = List.ElementAt(ID).GetImage(imageType.Full);
-            return Ok(new ApiImage { file = File });
+            return Ok(new ApiImage(List.ElementAt(ID)));
         }
 
         [HttpGet("/api/sfw/wallpaper")]
@@ -158,8 +157,7 @@ namespace Gallery.Controllers
         {
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 6);
             int ID = Program.RNGBetween(0, List.Count() - 1);
-            string File = List.ElementAt(ID).GetImage(imageType.Full);
-            return Ok(new ApiImage { file = File });
+            return Ok(new ApiImage(List.ElementAt(ID)));
         }
 
         [HttpGet("/api/sfw/azurlane")]
@@ -167,8 +165,7 @@ namespace Gallery.Controllers
         {
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 7);
             int ID = Program.RNGBetween(0, List.Count() - 1);
-            string File = List.ElementAt(ID).GetImage(imageType.Full);
-            return Ok(new ApiImage { file = File });
+            return Ok(new ApiImage(List.ElementAt(ID)));
         }
 
         [HttpGet("/api/sfw/nekopara")]
@@ -176,8 +173,7 @@ namespace Gallery.Controllers
         {
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 8);
             int ID = Program.RNGBetween(0, List.Count() - 1);
-            string File = List.ElementAt(ID).GetImage(imageType.Full);
-            return Ok(new ApiImage { file = File });
+            return Ok(new ApiImage(List.ElementAt(ID)));
         }
 
         [HttpGet("/api/nsfw/azurlane")]
@@ -185,8 +181,7 @@ namespace Gallery.Controllers
         {
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 11);
             int ID = Program.RNGBetween(0, List.Count() - 1);
-            string File = List.ElementAt(ID).GetImage(imageType.Full);
-            return Ok(new ApiImage { file = File });
+            return Ok(new ApiImage(List.ElementAt(ID)));
         }
 
         [HttpGet("/api/nsfw/nekopara")]
@@ -194,8 +189,17 @@ namespace Gallery.Controllers
         {
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 10);
             int ID = Program.RNGBetween(0, List.Count() - 1);
-            string File = List.ElementAt(ID).GetImage(imageType.Full);
-            return Ok(new ApiImage { file = File });
+            return Ok(new ApiImage(List.ElementAt(ID)));
+        }
+
+        [HttpGet("/api/nsfw/waifulewd")]
+        public IActionResult GetNsfwWaifuLewd()
+        {
+            if (DB.WaifuLewdCount == 0)
+                return BadRequest();
+            
+            GImage Img = DB.WaifuLewds.ElementAt(Program.RNGBetween(0, DB.WaifuLewdCount - 1));
+            return Ok(new ApiImage(Img));
         }
 
         [HttpGet("/api/nsfw/lewd")]
@@ -203,8 +207,7 @@ namespace Gallery.Controllers
         {
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 12);
             int ID = Program.RNGBetween(0, List.Count() - 1);
-            string File = List.ElementAt(ID).GetImage(imageType.Full);
-            return Ok(new ApiImage { file = File });
+            return Ok(new ApiImage(List.ElementAt(ID)));
         }
 
         [HttpPost("/api/upload/revolt")]
@@ -224,6 +227,7 @@ namespace Gallery.Controllers
         {
             if (!DB.Keys.TryGetValue(Request.Headers["Authorization"][0], out ApiUser User))
                 return Unauthorized();
+
             if (!int.TryParse(album, out int albumid) || !DB.Albums.TryGetValue(albumid, out GAlbum GA))
                 return BadRequest("Invalid album id");
             if (User.ID != "190590364871032834")

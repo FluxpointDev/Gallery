@@ -22,6 +22,27 @@ namespace Gallery.Database
         public static Dictionary<string, string> HashSet { get; set; } = new Dictionary<string, string>();
         public static Dictionary<int, GTag> Tags = new Dictionary<int, GTag>();
         public static Dictionary<string, ApiUser> Keys = new Dictionary<string, ApiUser>();
+        public static List<GImage> WaifuLewds = new List<GImage>();
+        public static int WaifuLewdCount = 0;
+        public static void ReloadWaifuLewds()
+        {
+            WaifuLewds = Images.Values.Where(x => LewdList.ContainsKey(x.album)).ToList();
+            WaifuLewdCount = WaifuLewds.Count();
+        }
+
+        public static Dictionary<int, string> LewdList = new Dictionary<int, string>
+        {
+            { 86, "." },
+            { 85, "." },
+            { 101, "." },
+            { 93, "." },
+            { 94, "." },
+            { 12, "." },
+            { 99, "." },
+            { 95, "." },
+            { 100, "." }
+        };
+
 
 
         public static void ReloadUsers()
@@ -39,6 +60,7 @@ namespace Gallery.Database
             Cursor<GImage> images = R.Db(Program.DatabaseName).Table("Images").RunCursor<GImage>(Con);
             Images = images.ToDictionary(x => x.id, x => x);
             HashSet = Images.Values.DistinctBy(x => x.id).ToDictionary(x => x.file.hash, x => x.id);
+            ReloadWaifuLewds();
         }
 
         public static void ReloadMetaData()
