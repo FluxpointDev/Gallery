@@ -51,8 +51,10 @@
 
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
     <link rel="stylesheet" href="_content/Radzen.Blazor/css/default-base.css">
+    <link href="_content/MatBlazor/dist/matBlazor.css" rel="stylesheet" />
     <link href="_content/Blazor.ContextMenu/blazorContextMenu.min.css" rel="stylesheet" />
-    <link href="css/site.css" rel="stylesheet" />
+    <link href="css/site.css?v=1" rel="stylesheet" />
+    <link href="css/gallery.css" rel="stylesheet" />
     <link href="_content/Blazored.Modal/blazored-modal.css" rel="stylesheet" />
 
     @Html.EmbeddedBlazorContent()
@@ -62,6 +64,7 @@
         @(await Html.RenderComponentAsync<App>(RenderMode.Server))
     </app>
     <script src="_framework/blazor.server.js"></script>
+    <script src="_content/MatBlazor/dist/matBlazor.js"></script>
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
     <script src="_content/Blazor.ContextMenu/blazorContextMenu.min.js"></script>
     <script src="~/javascript/clipboard.js"></script>

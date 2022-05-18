@@ -1,7 +1,8 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
-html, body {
+html, body, .content, .main {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: #1a1a1a !important;
 }
 
 a, .btn-link {
@@ -40,8 +41,9 @@ app {
     margin-left: 1.5rem;
 }
 
-.sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+.sidebar, .navbar-dark {
+    background-image: none !important;
+    background-color: #202020 !important;
 }
 
 .sidebar .top-row {
@@ -127,6 +129,8 @@ app {
         height: 100vh;
         position: sticky;
         top: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
     }
 
     .main .top-row {

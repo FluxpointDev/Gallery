@@ -16,57 +16,41 @@
     </NotAuthorized>
 </AuthorizeView>
 
-<div class="mat-layout-grid">
-    <div class="mat-layout-grid-inner">
         @if (Albums != null)
         {
+            <div class="ggrid">
         @foreach (GAlbum a in Albums)
         {
-        <div class="mat-layout-grid-cell">
-            <MatCard class="demo-mat-card">
-                <MatRipple>
-                    <a href="@("/album/" + a.id.ToString())">
-                        <MatCardContent>
-                            <MatCardMedia Wide="true" Style="width:320px;" ImageUrl="@a.GetThumbnailImage()"></MatCardMedia>
+            <a href="@("/album/" + a.id.ToString())">
+                <div class="galbum">
+                    <div class="galbum-inner" style="background-image: url('@a.GetThumbnailImage()'), linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.3));">
+                        <div class="gablum-header">
+                            @if (a.isNsfw)
+                            {
+                                  <span class="iconify" data-icon="mdi:folder-heart" style="color: #c07ec8;"></span>
+                        <h3 class="gablum-title">@a.name <p class="galbum-badge galbum-badge-nsfw">Nsfw</p>   </h3>
+                           
+                            }
+                            else if (!a.isPublic)
+                            {
+                                <span class="iconify" data-icon="mdi:folder-star" style="color: #fab13e;"></span>
+                        <h3 class="gablum-title">@a.name <p class="galbum-badge galbum-badge-private">Private</p></h3>
+                        
+                            }
+                            else
+                            {
+                                 <span class="iconify" data-icon="mdi:folder" style="color: #7489d8;"></span>
+                          <h3 class="gablum-title">@a.name</h3>         
+                             }
+                    </div>
+                    </div>
+               </div>
+           </a>
 
-                            <div class="demo-mat-card-content">
-                                <MatHeadline6 class="demo-mat-card-clean-margin">
-                                    @if (a.isNsfw)
-                                    {
-                                        @(@a.name + " (Nsfw)")
-                                    }
-                                    else
-                                    {
-                                        @a.name
-                                    }
-
-                                </MatHeadline6>
-                            </div>
-                        </MatCardContent>
-                    </a>
-                </MatRipple>
-            </MatCard>
-        </div>
         }
+         </div>
         }
-    </div>
-</div>
 
-<style>
-    .demo-mat-card {
-        max-width: 320px;
-         text-align: center;
-    background-color: #343a40;
-    }
-
-    .demo-mat-card-content {
-        padding: 1rem;
-    }
-
-    .demo-mat-card-clean-margin {
-        margin: 0px;
-    }
-</style>
 
 @code {
     List<GAlbum> Albums = null;

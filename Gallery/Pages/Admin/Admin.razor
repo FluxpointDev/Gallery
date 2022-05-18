@@ -4,188 +4,198 @@
 @using ImageMagick
 @using Gallery.Data
 @using System.IO
-@using MatBlazor
-@inject IMatToaster Toaster
+@using Radzen
 @attribute [Authorize]
 
 @if (DB.GalleryUsers[Session.State.User.GetId()].upload.enabled)
 {
-<MatTabGroup @bind-ActiveIndex="@tabIndex">
-    <MatTab Label="Main">
-        <div class="section">
-            <h3><span class="iconify" data-icon="mdi:database" data-inline="false" style="color: #fff;"></span> Database</h3>
-            <div class="section-list">
-                <div class="mat-layout-grid">
-                    <div class="mat-layout-grid-inner">
-                        <div class="mat-layout-grid-cell">
-                            <h5>Images: @DB.Images.Count</h5>
+    <RadzenTabs SelectedIndex="tabIndex">
+        <Tabs>
+            <RadzenTabsItem Text="Main">
+                <div class="section">
+                    <h3><span class="iconify" data-icon="mdi:database" data-inline="false" style="color: #fff;"></span> Database</h3>
+                    <div class="section-list">
+                        <div class="mat-layout-grid">
+                            <div class="mat-layout-grid-inner">
+                                <div class="mat-layout-grid-cell">
+                                    <h5>Images: @DB.Images.Count</h5>
+                                </div>
+                                <div class="mat-layout-grid-cell">
+                                    <h5>Albums: @DB.Albums.Count</h5>
+                                </div>
+                                <div class="mat-layout-grid-cell">
+                                    <h5>Tags: @DB.Tags.Count</h5>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mat-layout-grid-cell">
-                            <h5>Albums: @DB.Albums.Count</h5>
+                    </div>
+                    <AuthorizeView Roles="owner">
+                        <br />
+                        <div class="section-list">
+                            <RadzenButton Click=@(() => ReloadAction("tags")) Text="Reload Tags" ButtonStyle="ButtonStyle.Light" />
+                            <RadzenButton Click=@(() => ReloadAction("images")) Text="Reload Tags" ButtonStyle="ButtonStyle.Light" />
+                            <RadzenButton Click=@(() => ReloadAction("albums")) Text="Reload Tags" ButtonStyle="ButtonStyle.Light" />
+                            <RadzenButton Click=@(() => ReloadAction("metadata")) Text="Reload Tags" ButtonStyle="ButtonStyle.Light" />
+                            <RadzenButton Click=@(() => ReloadAction("users")) Text="Reload Tags" ButtonStyle="ButtonStyle.Light" />
+                            <RadzenButton Click=@(() => ReloadAction("api")) Text="Reload Tags" ButtonStyle="ButtonStyle.Light" />
+                            <RadzenButton Click=@(() => ReloadAction("waifu")) Text="Reload Tags" ButtonStyle="ButtonStyle.Light" />
                         </div>
-                        <div class="mat-layout-grid-cell">
-                            <h5>Tags: @DB.Tags.Count</h5>
+                    </AuthorizeView>
+                </div>
+                <div class="section">
+                    <h3><span class="iconify" data-icon="mdi:image-multiple" data-inline="false" style="color: #fff;"></span> Images</h3>
+                    <div class="section-list">
+                        <div class="section-item section-color-add" @onclick="@(() => GoTo(1))">
+                            <h5>Upload</h5>
+                            <span class="iconify" data-icon="mdi:cloud-upload" data-inline="false" style="color: #fff;"></span>
+                        </div>
+                        <div class="section-item section-color-edit" @onclick="@(() => GoTo(2))">
+                            <h5>Manage</h5>
+                            <span class="iconify" data-icon="mdi:image-edit" data-inline="false" style="color: #fff;"></span>
+                        </div>
+                        <div class="section-item section-color-delete" @onclick="@(() => GoTo(3))">
+                            <h5>Delete</h5>
+                            <span class="iconify" data-icon="mdi:image-remove" data-inline="false" style="color: #fff;"></span>
+                        </div>
+                        <div class="section-item section-color-misc" @onclick="@TestClick">
+                            <h5>Regen Thumbnails</h5>
+                        </div>
+                        <div class="section-item section-color-misc" @onclick="@CheckImages">
+                            <h5>Check Images</h5>
                         </div>
                     </div>
                 </div>
-            </div>
-            <AuthorizeView Roles="owner">
-                <br />
-                <div class="section-list">
-                    <MatButton OnClick="@(() => ReloadAction("tags"))" Unelevated="true" Icon="label">Reload Tags</MatButton>
-                    <MatButton OnClick="@(() => ReloadAction("images"))" Unelevated="true" Icon="image">Reload Images</MatButton>
-                    <MatButton OnClick="@(() => ReloadAction("albums"))" Unelevated="true" Icon="view_comfy">Reload Albums</MatButton>
-                    <MatButton OnClick="@(() => ReloadAction("metadata"))" Unelevated="true" Icon="not_listed_location">Reload Metadata</MatButton>
-                    <MatButton OnClick="@(() => ReloadAction("users"))" Unelevated="true" Icon="person_pin">Reload Users</MatButton>
-                    <MatButton OnClick="@(() => ReloadAction("api"))" Unelevated="true" Icon="vpn_key">Reload API Keys</MatButton>
-                    <MatButton OnClick="@(() => ReloadAction("waifu"))" Unelevated="true" Icon="vpn_key">Reload Waifu Images</MatButton>
+                <div class="section">
+                    <h3><span class="iconify" data-icon="mdi:folder-multiple-image" data-inline="false" style="color: #fff;"></span> Albums</h3>
+                    <div class="section-list">
+                        <div class="section-item section-color-add" @onclick="@(() => GoTo(4))">
+                            <h5>Create</h5>
+                            <span class="iconify" data-icon="mdi:folder-plus" data-inline="false" style="color: #fff;"></span>
+                        </div>
+                        <div class="section-item section-color-edit" @onclick="@(() => GoTo(5))">
+                            <h5>Manage</h5>
+                            <span class="iconify" data-icon="mdi:folder-edit" data-inline="false" style="color: #fff;"></span>
+                        </div>
+                        <div class="section-item section-color-delete" @onclick="@(() => GoTo(6))">
+                            <h5>Delete</h5>
+                            <span class="iconify" data-icon="mdi:folder-remove" data-inline="false" style="color: #fff;"></span>
+                        </div>
+                        <div class="section-item section-color-misc" @onclick="@MigrateTags">
+                            <h5>Migrate Tags</h5>
+                        </div>
+                    </div>
                 </div>
-            </AuthorizeView>
-        </div>
-        <div class="section">
-            <h3><span class="iconify" data-icon="mdi:image-multiple" data-inline="false" style="color: #fff;"></span> Images</h3>
-            <div class="section-list">
-                <div class="section-item section-color-add" @onclick="@(() => GoTo(1))">
-                    <h5>Upload</h5>
-                    <span class="iconify" data-icon="mdi:cloud-upload" data-inline="false" style="color: #fff;"></span>
+                <div class="section">
+                    <h3><span class="iconify" data-icon="mdi:label-multiple" data-inline="false" style="color: #fff;"></span> Tags</h3>
+                    <div class="section-list">
+                        <div class="section-item section-color-add" @onclick="@(() => GoTo(7))">
+                            <h5>Create</h5>
+                            <span class="iconify" data-icon="mdi:tag-plus" data-inline="false" style="color: #fff;"></span>
+                        </div>
+                        <div class="section-item section-color-edit" @onclick="@(() => GoTo(8))">
+                            <h5>Manage</h5>
+                            <span class="iconify" data-icon="mdi:tag-text" data-inline="false" style="color: #fff;"></span>
+                        </div>
+                        <div class="section-item section-color-delete" @onclick="@(() => GoTo(9))">
+                            <h5>Delete</h5>
+                            <span class="iconify" data-icon="mdi:tag-remove" data-inline="false" style="color: #fff;"></span>
+                        </div>
+                    </div>
                 </div>
-                <div class="section-item section-color-edit" @onclick="@(() => GoTo(2))">
-                    <h5>Manage</h5>
-                    <span class="iconify" data-icon="mdi:image-edit" data-inline="false" style="color: #fff;"></span>
+            </RadzenTabsItem>
+
+            <RadzenTabsItem Text="Upload Image">
+                <div class="section-header">
+                    <div class="section-back" @onclick="@(() => GoTo(0))">
+                        <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+                    </div>
+                    <h2>Image Upload</h2>
                 </div>
-                <div class="section-item section-color-delete" @onclick="@(() => GoTo(3))">
-                    <h5>Delete</h5>
-                    <span class="iconify" data-icon="mdi:image-remove" data-inline="false" style="color: #fff;"></span>
+                <UploadSection></UploadSection>
+            </RadzenTabsItem>
+
+            <RadzenTabsItem Text="Manage Images">
+                <div class="section-header">
+                    <div class="section-back" @onclick="@(() => GoTo(0))">
+                        <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+                    </div>
+                    <h2>Manage Images</h2>
                 </div>
-                <div class="section-item section-color-misc" @onclick="@TestClick">
-                    <h5>Regen Thumbnails</h5>
+                <AuthorizeView Roles="owner">
+                    <ImagesManageSection></ImagesManageSection>
+                </AuthorizeView>
+            </RadzenTabsItem>
+
+            <RadzenTabsItem Text="Delete Images">
+                <div class="section-header">
+                    <div class="section-back" @onclick="@(() => GoTo(0))">
+                        <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+                    </div>
+                    <h2>Image Delete</h2>
                 </div>
-                <div class="section-item section-color-misc" @onclick="@CheckImages">
-                    <h5>Check Images</h5>
+                <RadzenTextBox Value="@Image" Name="ID" />
+                <button @onclick="@DeleteImage">Delete image</button>
+            </RadzenTabsItem>
+
+            <RadzenTabsItem Text="Create Album">
+                <div class="section-header">
+                    <div class="section-back" @onclick="@(() => GoTo(0))">
+                        <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+                    </div>
+                    <h2>Album Create</h2>
                 </div>
-            </div>
-        </div>
-        <div class="section">
-            <h3><span class="iconify" data-icon="mdi:folder-multiple-image" data-inline="false" style="color: #fff;"></span> Albums</h3>
-            <div class="section-list">
-                <div class="section-item section-color-add" @onclick="@(() => GoTo(4))">
-                    <h5>Create</h5>
-                    <span class="iconify" data-icon="mdi:folder-plus" data-inline="false" style="color: #fff;"></span>
+            </RadzenTabsItem>
+
+            <RadzenTabsItem Text="Manage Albums">
+                <div class="section-header">
+                    <div class="section-back" @onclick="@(() => GoTo(0))">
+                        <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+                    </div>
+                    <h2>Album Manage</h2>
                 </div>
-                <div class="section-item section-color-edit" @onclick="@(() => GoTo(5))">
-                    <h5>Manage</h5>
-                    <span class="iconify" data-icon="mdi:folder-edit" data-inline="false" style="color: #fff;"></span>
+            </RadzenTabsItem>
+
+            <RadzenTabsItem Text="Delete Albums">
+                <div class="section-header">
+                    <div class="section-back" @onclick="@(() => GoTo(0))">
+                        <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+                    </div>
+                    <h2>Album Delete</h2>
                 </div>
-                <div class="section-item section-color-delete" @onclick="@(() => GoTo(6))">
-                    <h5>Delete</h5>
-                    <span class="iconify" data-icon="mdi:folder-remove" data-inline="false" style="color: #fff;"></span>
+            </RadzenTabsItem>
+
+            <RadzenTabsItem Text="Create Tag">
+                <div class="section-header">
+                    <div class="section-back" @onclick="@(() => GoTo(0))">
+                        <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+                    </div>
+                    <h2>Create Tag</h2>
                 </div>
-                <div class="section-item section-color-misc" @onclick="@MigrateTags">
-                    <h5>Migrate Tags</h5>
+                <AuthorizeView Roles="owner">
+                    <RadzenTextBox Value="@NewTag" Name="ID" />
+                    <button @onclick="@AddTag">Add Tag</button>
+                </AuthorizeView>
+            </RadzenTabsItem>
+
+            <RadzenTabsItem Text="Manage Tags">
+                <div class="section-header">
+                    <div class="section-back" @onclick="@(() => GoTo(0))">
+                        <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+                    </div>
+                    <h2>Tags Manage</h2>
                 </div>
-            </div>
-        </div>
-        <div class="section">
-            <h3><span class="iconify" data-icon="mdi:label-multiple" data-inline="false" style="color: #fff;"></span> Tags</h3>
-            <div class="section-list">
-                <div class="section-item section-color-add" @onclick="@(() => GoTo(7))">
-                    <h5>Create</h5>
-                    <span class="iconify" data-icon="mdi:tag-plus" data-inline="false" style="color: #fff;"></span>
+            </RadzenTabsItem>
+
+            <RadzenTabsItem Text="Delete Tags">
+                <div class="section-header">
+                    <div class="section-back" @onclick="@(() => GoTo(0))">
+                        <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+                    </div>
+                    <h2>Delete Tag</h2>
                 </div>
-                <div class="section-item section-color-edit" @onclick="@(() => GoTo(8))">
-                    <h5>Manage</h5>
-                    <span class="iconify" data-icon="mdi:tag-text" data-inline="false" style="color: #fff;"></span>
-                </div>
-                <div class="section-item section-color-delete" @onclick="@(() => GoTo(9))">
-                    <h5>Delete</h5>
-                    <span class="iconify" data-icon="mdi:tag-remove" data-inline="false" style="color: #fff;"></span>
-                </div>
-            </div>
-        </div>
-    </MatTab>
-    <MatTab Label="Image Upload 1">
-        <div class="section-header">
-            <div class="section-back" @onclick="@(() => GoTo(0))">
-                <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
-            </div>
-            <h2>Image Upload</h2>
-        </div>
-        <UploadSection></UploadSection>
-    </MatTab>
-    <MatTab Label="Image Manage 2">
-        <div class="section-header">
-            <div class="section-back" @onclick="@(() => GoTo(0))">
-                <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
-            </div>
-            <h2>Manage Images</h2>
-        </div>
-        <AuthorizeView Roles="owner">
-            <ImagesManageSection></ImagesManageSection>
-        </AuthorizeView>
-    </MatTab>
-    <MatTab Label="Image Delete 3">
-        <div class="section-header">
-            <div class="section-back" @onclick="@(() => GoTo(0))">
-                <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
-            </div>
-            <h2>Image Delete</h2>
-        </div>
-        <MatTextField @bind-Value="@Image" Label="Standard"></MatTextField>
-        <button @onclick="@DeleteImage">Delete image</button>
-    </MatTab>
-    <MatTab Label="Album Create 4">
-        <div class="section-header">
-            <div class="section-back" @onclick="@(() => GoTo(0))">
-                <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
-            </div>
-            <h2>Album Create</h2>
-        </div>
-    </MatTab>
-    <MatTab Label="Album Manage 5">
-        <div class="section-header">
-            <div class="section-back" @onclick="@(() => GoTo(0))">
-                <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
-            </div>
-            <h2>Album Manage</h2>
-        </div>
-    </MatTab>
-    <MatTab Label="Album Delete 6">
-        <div class="section-header">
-            <div class="section-back" @onclick="@(() => GoTo(0))">
-                <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
-            </div>
-            <h2>Album Delete</h2>
-        </div>
-    </MatTab>
-    <MatTab Label="Create Tag 7">
-        <div class="section-header">
-            <div class="section-back" @onclick="@(() => GoTo(0))">
-                <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
-            </div>
-            <h2>Create Tag</h2>
-        </div>
-        <AuthorizeView Roles="owner">
-            <MatTextField @bind-Value="@NewTag" Label="Standard"></MatTextField>
-            <button @onclick="@AddTag">Add Tag</button>
-        </AuthorizeView>
-    </MatTab>
-    <MatTab Label="Manage Tags 8">
-        <div class="section-header">
-            <div class="section-back" @onclick="@(() => GoTo(0))">
-                <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
-            </div>
-            <h2>Tags Manage</h2>
-        </div>
-    </MatTab>
-    <MatTab Label="Delete Tag 9">
-        <div class="section-header">
-            <div class="section-back" @onclick="@(() => GoTo(0))">
-                <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
-            </div>
-            <h2>Delete Tag</h2>
-        </div>
-    </MatTab>
-</MatTabGroup>
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
 }
 
 <style>
@@ -343,7 +353,7 @@
             return;
         }
         ShowToast("Running migration");
-        foreach(GImage i in DB.Images.Values)
+        foreach (GImage i in DB.Images.Values)
         {
             switch (i.album)
             {
@@ -353,7 +363,7 @@
                         {
                             i.tags.Add(10);
                         }
-                        catch {}
+                        catch { }
                         i.Update();
                     }
                     break;
@@ -363,7 +373,7 @@
                         {
                             i.tags.Add(12);
                         }
-                        catch {}
+                        catch { }
                         i.Update();
                     }
                     break;
@@ -373,12 +383,12 @@
                         {
                             i.tags.Add(9);
                         }
-                        catch {}
+                        catch { }
                         try
                         {
                             i.tags.Add(1);
                         }
-                        catch {}
+                        catch { }
                         i.Update();
                     }
                     break;
@@ -391,10 +401,10 @@
     {
         int id = DB.Tags.Values.OrderByDescending(x => x.id).First().id + 1;
         GTag newtag = new GTag()
-        {
-            id = id,
-            name = NewTag
-        };
+            {
+                id = id,
+                name = NewTag
+            };
         DB.Tags.Add(id, newtag);
         newtag.Add();
         ShowToast("Tag added", true);
@@ -511,18 +521,17 @@
 
     public void ShowToast(string desc, bool force = false)
     {
-        Toaster.Add(desc, MatToastType.Success, "", "", config =>
-        {
-            config.RequireInteraction = force;
-            config.ShowCloseButton = force;
-            config.ShowProgressBar = true;
-            config.MaximumOpacity = Convert.ToInt32(100);
+        //Toaster.Add(desc, MatToastType.Success, "", "", config =>
+        //{
+        //    config.RequireInteraction = force;
+        //    config.ShowCloseButton = force;
+        //    config.ShowProgressBar = true;
+        //    config.MaximumOpacity = Convert.ToInt32(100);
 
-            config.ShowTransitionDuration = Convert.ToInt32(500);
-            config.VisibleStateDuration = Convert.ToInt32(8000);
-            config.HideTransitionDuration = Convert.ToInt32(500);
-
-        });
+        //    config.ShowTransitionDuration = Convert.ToInt32(500);
+        //    config.VisibleStateDuration = Convert.ToInt32(8000);
+        //    config.HideTransitionDuration = Convert.ToInt32(500);
+        //});
     }
 
 }

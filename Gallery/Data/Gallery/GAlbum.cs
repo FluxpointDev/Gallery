@@ -21,11 +21,11 @@ namespace Gallery.Data
 
         public string GetThumbnailImage()
         {
-            if (thumbnailImage == "")
-                return "";
+            if (string.IsNullOrEmpty(thumbnailImage))
+                return "https://cdn.discordapp.com/attachments/275062423159963648/976270964658696192/image-placeholder1.png";
             if (DB.Images.TryGetValue(thumbnailImage, out GImage img))
                 return img.GetImage(imageType.Thumbnail);
-            return "";
+            return "https://cdn.discordapp.com/attachments/275062423159963648/976270964658696192/image-placeholder1.png";
         }
 
         public bool HasAccess(Session session)

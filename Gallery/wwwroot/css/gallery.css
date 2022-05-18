@@ -1,0 +1,123 @@
+﻿.ggrid {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 1100px;
+    text-align: center;
+}
+
+.galbum {
+    background-color: #171d20 !important;
+    width: 240px;
+    height: 240px;
+    display: inline-block;
+    vertical-align: top;
+    border-radius: 20px;
+    margin: 4px;
+}
+
+.galbum-inner {
+    border-radius: 20px;
+    background-repeat: no-repeat;
+    background-size: cover !important;
+    background-blend-mode: overlay !important;
+    height: 100% !important;
+}
+
+.gablum-header {
+    padding-left: 6px;
+    padding-right: 10px;
+    padding-top: 6px;
+    padding-bottom: 2px;
+    text-align: left;
+    border-radius: 20px 20px 0 0;
+    background-color: rgba(0,0,0,0.4);
+}
+
+    .gablum-header .iconify {
+        background-color: #3a3a3a;
+        border-radius: 60px;
+        padding: 4px;
+        width: 30px;
+        height: 30px;
+        vertical-align: top !important;
+    }
+
+.gablum-title {
+    height: 45px;
+    margin-left: 2px;
+    display: inline-block;
+    font-size: 14pt;
+    color: white !important;
+    font-weight: bold;
+    max-width: 180px;
+}
+
+.galbum-badge {
+    display: inline-block;
+    text-align: right !important;
+    color: white;
+    border-radius: 20px;
+    padding: 2px;
+    padding-left: 8px;
+    margin-left: 4px;
+    padding-right: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11pt !important;
+    font-family: BlinkMacSystemFont,-apple-system,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,Helvetica,Arial,sans-serif;
+}
+
+.galbum-badge-private {
+    background-color: #b47d27 !important;
+}
+
+.galbum-badge-nsfw {
+    background-color: #7c3485 !important;
+}
+
+.gimage {
+    background-color: #171d20 !important;
+    width: 240px;
+    height: 240px;
+    display: inline-block;
+    vertical-align: top;
+    border-radius: 4px;
+    margin: 4px;
+    padding: 2px;
+}
+
+    .gimage:hover {
+        padding: 0px;
+    }
+
+    .gimage img {
+        width: 240px;
+        height: 240px;
+    }
+
+        .gimage img:hover {
+            opacity: 0.8;
+        }
+
+
+.loading {
+    animation-duration: 2.6s;
+    animation-fill-mode: forwards;
+    animation-iteration-count: infinite;
+    animation-name: shimmer;
+    animation-timing-function: linear;
+    background: linear-gradient(to right, #262932 8%, #2d313b 18%, #262932 33%);
+    background-size: 1200px 100%;
+}
+
+@-webkit-keyframes shimmer {
+    0% {
+        background-position: -100% 0;
+    }
+
+    100% {
+        background-position: 100% 0;
+    }
+}

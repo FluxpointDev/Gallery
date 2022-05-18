@@ -53,41 +53,37 @@ else
         @if (SubAlbums != null)
         {
 
-
-        <div class="mat-layout-grid">
-        <div class="mat-layout-grid-inner">
-        
+        <div class="ggrid">
         @foreach (GAlbum a in SubAlbums)
         {
-        <div class="mat-layout-grid-cell">
-            <MatCard class="demo-mat-card">
-                <MatRipple>
-                    <a href="@("/album/" + a.id.ToString())">
-                        <MatCardContent>
-                            <MatCardMedia Wide="true" Style="width:320px;" ImageUrl="@a.GetThumbnailImage()"></MatCardMedia>
-
-                            <div class="demo-mat-card-content">
-                                <MatHeadline6 class="demo-mat-card-clean-margin">
-                                    @if (a.isNsfw)
-                                    {
-                                        @(@a.name + " (Nsfw)")
-                                    }
-                                    else
-                                    {
-                                        @(a.name + $" ({DB.Images.Values.Where(x => x.album == a.id).Count()})")
-                                    }
-
-                                </MatHeadline6>
-                            </div>
-                        </MatCardContent>
-                    </a>
-                </MatRipple>
-            </MatCard>
-        </div>
+        <a href="@("/album/" + a.id.ToString())">
+                <div class="galbum">
+                    <div class="galbum-inner" style="background-image: url('@a.GetThumbnailImage()'), linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.3));">
+                        <div class="gablum-header">
+                            @if (a.isNsfw)
+                            {
+                                  <span class="iconify" data-icon="mdi:folder-heart" style="color: #c07ec8;"></span>
+                        <h3 class="gablum-title">@a.name <p class="galbum-badge galbum-badge-nsfw">Nsfw</p>   </h3>
+                           
+                            }
+                            else if (!a.isPublic)
+                            {
+                                <span class="iconify" data-icon="mdi:folder-star" style="color: #fab13e;"></span>
+                        <h3 class="gablum-title">@a.name <p class="galbum-badge galbum-badge-private">Private</p></h3>
+                        
+                            }
+                            else
+                            {
+                                 <span class="iconify" data-icon="mdi:folder" style="color: #7489d8;"></span>
+                          <h3 class="gablum-title">@a.name</h3>         
+                             }
+                    </div>
+                    </div>
+               </div>
+           </a>
         }
-        
-    </div>
-</div>
+        </div>
+       
 }
         if (Images.Count() == 0)
         {
@@ -96,17 +92,21 @@ else
         else
         {
             <iframe id="dliframe" style="display:none"></iframe>
+            <div class="ggrid">
             <RadzenDataList @ref="ImageGrid" EmptyText="This album has no images :(" WrapItems="true" @bind-PageNumbersCount="@CurrentPage" @bind-PageSize="@PageSize" LoadData="@LoadData" AllowPaging="true" Data="@Selected" TItem="GImage">
                 <Template Context="order">
-                    <RadzenCard Id="@("card-" + order.id)" Style="width:320px; height:320px;">
-                        <a Id="@("link-" + order.id)" href="@("/album/" + albumid)" @onclick="@(() => ShowImage(order.id))">
+
+                     <a Id="@("link-" + order.id)" href="@("/album/" + albumid)" @onclick="@(() => ShowImage(order.id))">
+                        
                             <ContextMenuTrigger MenuId="dynamicmenu" Data="order">
-                                <img id="@("img-" + order.id)" class="album-image" src="@order.GetImage(imageType.Thumbnail)" />
+                                 <div Id="@("card-" + order.id)" class="gimage">
+                             <img id="@("img-" + order.id)" src="@order.GetImage(imageType.Thumbnail)" onerror="this.onerror=null;this.src='https://cdn.discordapp.com/attachments/275062423159963648/976286472900579378/no-image-min.png';" />
+                         </div>
                             </ContextMenuTrigger>
                         </a>
-                    </RadzenCard>
                 </Template>
             </RadzenDataList>
+            </div>
             <AlbumPaginator CurrentPage="CurrentPage" MaxPageCount="MaxPageCount" PageCountChanged="@((num) => OnPageCountChanged(num))"></AlbumPaginator>
             <ContextMenu Animation="BlazorContextMenu.Animation.Zoom" CssClass="context-menu" Id="dynamicmenu" Context="order">
                 <a href="@((order.Data as GImage).GetImage(imageType.Full))" target="_blank"><Item><span class="oi oi-image" /> View Image</Item></a>
@@ -118,19 +118,7 @@ else
 }
 
 <style>
-    .card {
-        width: 320px;
-        max-width: 320px;
-        height: 320px;
-        max-height: 320px;
-    }
-
-    .album-image {
-        width: 320px;
-        max-width: 320px;
-        height: 320px;
-        max-height: 320px;
-    }
+    
 
     .blazored-modal {
         padding: 0px !important;
@@ -142,19 +130,6 @@ else
         box-shadow: none;
         border: 1px solid #616161;
         background-color: #404448;
-    }
-
-    .ui-g > div {
-        margin: 0.3rem !important;
-    }
-
-    .ui-g {
-        margin-left: 20px;
-    }
-
-    .card {
-        border: none !important;
-        padding: 0px !important;
     }
 
     /* Dark theme context menu */
@@ -181,23 +156,32 @@ else
     }
 
     /* Dark theme paginator controls */
-    .ui-paginator {
+    .rz-g {
+        max-width: 1080px;
+        max-height: 740px;
+        margin-left: 20px;
+    }
+
+.rz-paginator-page {
+    border: none !important;
+        background-color: #45474d !important;
+    color: white !important;
+}
+
+.rz-state-active {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    color: #8ca1ef !important;
+}
+    .rz-paginator {
         border: none;
         background-color: #383232 !important;
-        margin-top: 5px;
-        margin-bottom: 15px;
+        position: sticky !important;
+    bottom: 0 !important;
     }
-
-    .ui-paginator-page.ui-state-active {
-        color: rgb(5,65,194);
-    }
-
-    .ui-paginator-page:hover {
-        color: black;
-    }
-
-    .ui-paginator-bottom {
-    display: none;
+.rz-paginator-prev, .rz-paginator-first {
+    background-color: #479cc8 !important;
+    color: white;
 }
 
     /* Nsfw warning */
@@ -228,23 +212,19 @@ else
     width: 100%;
     height: 100%;
 }
+
+a > div {
+    width: 240px;
+height: 240px;
+display: inline-block;
+vertical-align: top;
+border-radius: 4px;
+margin: 4px;
+padding: 2px;
+}
 </style>
 
-<style>
-    .demo-mat-card {
-        max-width: 320px;
-         text-align: center;
-    background-color: #343a40;
-    }
 
-    .demo-mat-card-content {
-        padding: 1rem;
-    }
-
-    .demo-mat-card-clean-margin {
-        margin: 0px;
-    }
-</style>
 
 @code {
     [Parameter]
