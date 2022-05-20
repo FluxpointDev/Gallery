@@ -33,12 +33,13 @@
                         <br />
                         <div class="section-list">
                             <RadzenButton Click=@(() => ReloadAction("tags")) Text="Reload Tags" ButtonStyle="ButtonStyle.Light" />
-                            <RadzenButton Click=@(() => ReloadAction("images")) Text="Reload Tags" ButtonStyle="ButtonStyle.Light" />
-                            <RadzenButton Click=@(() => ReloadAction("albums")) Text="Reload Tags" ButtonStyle="ButtonStyle.Light" />
-                            <RadzenButton Click=@(() => ReloadAction("metadata")) Text="Reload Tags" ButtonStyle="ButtonStyle.Light" />
-                            <RadzenButton Click=@(() => ReloadAction("users")) Text="Reload Tags" ButtonStyle="ButtonStyle.Light" />
-                            <RadzenButton Click=@(() => ReloadAction("api")) Text="Reload Tags" ButtonStyle="ButtonStyle.Light" />
-                            <RadzenButton Click=@(() => ReloadAction("waifu")) Text="Reload Tags" ButtonStyle="ButtonStyle.Light" />
+                            <RadzenButton Click=@(() => ReloadAction("images")) Text="Reload Images" ButtonStyle="ButtonStyle.Light" />
+                            <RadzenButton Click=@(() => ReloadAction("albums")) Text="Reload Albums" ButtonStyle="ButtonStyle.Light" />
+                            <RadzenButton Click=@(() => ReloadAction("metadata")) Text="Reload Metadata" ButtonStyle="ButtonStyle.Light" />
+                            <RadzenButton Click=@(() => ReloadAction("users")) Text="Reload Users" ButtonStyle="ButtonStyle.Light" />
+                            <RadzenButton Click=@(() => ReloadAction("api")) Text="Reload API" ButtonStyle="ButtonStyle.Light" />
+                                <RadzenButton Click=@(() => ReloadAction("endpoint")) Text="Reload Endpoints" ButtonStyle="ButtonStyle.Light" />
+                            <RadzenButton Click=@(() => ReloadAction("waifu")) Text="Reload Waifu Nsfw" ButtonStyle="ButtonStyle.Light" />
                         </div>
                     </AuthorizeView>
                 </div>
@@ -102,6 +103,15 @@
                         </div>
                     </div>
                 </div>
+                <div class="section">
+                    <h3><span class="iconify" data-icon="mdi:label-multiple" data-inline="false" style="color: #fff;"></span> API</h3>
+                    <div class="section-list">
+                        <div class="section-item section-color-add" @onclick="@(() => GoTo(10))">
+                            <h5>Manage Endpoints</h5>
+                            <span class="iconify" data-icon="mdi:bolt" data-inline="false" style="color: #fff;"></span>
+                        </div>
+                    </div>
+                </div>
             </RadzenTabsItem>
 
             <RadzenTabsItem Text="Upload Image">
@@ -133,8 +143,8 @@
                     </div>
                     <h2>Image Delete</h2>
                 </div>
-                <RadzenTextBox Value="@Image" Name="ID" />
-                <button @onclick="@DeleteImage">Delete image</button>
+                <RadzenTextBox @bind-Value="@Image" Name="ID" />
+    <MatButton OnClick="@DeleteImage">Delete image</MatButton>
             </RadzenTabsItem>
 
             <RadzenTabsItem Text="Create Album">
@@ -172,7 +182,7 @@
                     <h2>Create Tag</h2>
                 </div>
                 <AuthorizeView Roles="owner">
-                    <RadzenTextBox Value="@NewTag" Name="ID" />
+                    <RadzenTextBox @bind-Value="@NewTag" Name="ID" />
                     <button @onclick="@AddTag">Add Tag</button>
                 </AuthorizeView>
             </RadzenTabsItem>
@@ -192,6 +202,61 @@
                         <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
                     </div>
                     <h2>Delete Tag</h2>
+                </div>
+            </RadzenTabsItem>
+
+            <RadzenTabsItem Text="API Manager">
+                <div class="section-header">
+                    <div class="section-back" @onclick="@(() => GoTo(0))">
+                        <span class="iconify" data-icon="mdi:keyboard-backspace" data-inline="false" style="color: #fff;"></span>
+                    </div>
+                    <h2>API Manager</h2>
+                    <AuthorizeView Roles="owner">
+                        <br />
+                        <h4 class="mb-4">Path</h4>
+                        <RadzenTextBox @bind-Value="@EndpointPath" Name="Path" />
+                        <h4 class="mb-4">Is Gif</h4>
+                        <RadzenCheckBox @bind-Value=@EndpointGif  Name="Is Gif" TValue="bool" />
+                        <h4 class="mb-4">Is Nsfw</h4>
+                        <RadzenCheckBox @bind-Value=@EndpointNsfw  Name="Is Nsfw" TValue="bool" />
+                        <h4 class="mb-4">Albums</h4>
+                        <RadzenTextBox @bind-Value="@EndpointAlbums" Name="Albums" />
+                        <h4 class="mb-4">Tags</h4>
+                        <RadzenTextBox @bind-Value="@EndpointTags" Name="Tags" />
+                        <br />
+                        <MatButton OnClick="@AddEndpoint">Add</MatButton>
+                        <br />
+                        
+                        @foreach(var i in DB.Endpoints.Values)
+                        {
+                            <div class="endpoint-item">
+                                <span class="iconify" data-icon="mdi:close-circle" @onclick="@(() => DeleteEndpoint(i.id))"></span>
+                                @if (i.isNsfw)
+                                {
+                                    <h3 class="endpoint-item-nsfw">@i.GetPath()</h3>
+                                }
+                                else
+                                {
+                                    <h3 class="endpoint-item-sfw">@i.GetPath()</h3>
+                                }
+                                <div class="endpoint-albums">
+                                    <p>Albums: </p>
+                                    @foreach (var a in i.albums)
+                                    {
+                                        <a target="_blank" href="@("https://gallery.fluxpoint.dev/album/" + a.Key)"><div class="endpoint-album"><h4>@a.Key</h4></div></a>
+                                    }
+                                </div>
+                                <div class="endpoint-albums">
+                                    <p>Tags: </p>
+                                    @foreach (var a in i.tags)
+                                    {
+                                        <div class="endpoint-album"><h4>@a.Key</h4></div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        
+                    </AuthorizeView>
                 </div>
             </RadzenTabsItem>
         </Tabs>
@@ -325,7 +390,68 @@
             padding-top: 10px;
         }
 </style>
+<style>
+    .rz-tabview-panel {
+    background-color: #2c2c2c !important;
+}
+.mb-4 {
+    margin-top: 30px;
+    margin-bottom: 6px !important;
+}
+.rz-tabview-panel .mdc-button {
+    margin-top: 20px;
+    background-color: #1b6ec2;
+    color: white !important;
+}
 
+.endpoint-item {
+    background-color: #191919 !important;
+    border-radius: 6px;
+    margin-top: 6px;
+    margin-bottom: 6px;
+}
+.endpoint-item .iconify {
+    width: 26px;
+    height: 26px;
+    margin-bottom: -2px;
+    color: #f74d5a !important;
+    margin-left: 10px;
+    cursor: pointer;
+}
+.endpoint-item h3 {
+    display: inline-block;
+    font-size: 18pt;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    margin-left: 10px;
+}
+.endpoint-item-nsfw {
+    color: #da66ad !important;
+}
+.endpoint-item-sfw {
+    color: #62adca !important;
+}
+
+.endpoint-albums {
+    margin-left: 42px;
+    margin-right: 10px;
+    padding-bottom: 6px;
+}
+
+.endpoint-album h4 {
+    display: inline-block;
+    margin-right: 6px;
+    margin-bottom: 6px;
+    padding: 12px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    border-radius: 90px;
+    background-color: #2c2c2c !important;
+}
+.rz-tabview-nav {
+    display: none;
+}
+</style>
 
 
 
@@ -340,6 +466,44 @@
     public void GoTo(int page)
     {
         tabIndex = page;
+    }
+
+    public string EndpointPath;
+    public bool EndpointNsfw;
+    public bool EndpointGif;
+    public string EndpointAlbums;
+    public string EndpointTags;
+
+    public void AddEndpoint()
+    {
+        if (string.IsNullOrEmpty(EndpointPath) || (string.IsNullOrEmpty(EndpointAlbums) && string.IsNullOrEmpty(EndpointTags)))
+            return;
+        Endpoint EN = new Endpoint
+            {
+                id = DB.Endpoints.Keys.OrderByDescending(x => x).First() + 1,
+                isNsfw = EndpointNsfw,
+                path = EndpointPath,
+                isGifs = EndpointGif
+            };
+
+        if (!string.IsNullOrEmpty(EndpointAlbums))
+            EN.albums = EndpointAlbums.Split(',', StringSplitOptions.TrimEntries).ToDictionary(x => int.Parse(x), x => '.');
+        if (!string.IsNullOrEmpty(EndpointTags))
+            EN.albums = EndpointTags.Split(',', StringSplitOptions.TrimEntries).ToDictionary(x => int.Parse(x), x => '.');
+        DB.Endpoints.Add(EN.id, EN);
+        DB.EndpointCache.Add(EN.GetPath(), EN.id);
+        EndpointPath = "";
+        EndpointAlbums = "";
+        EndpointTags = "";
+        DB.R.Db(Program.DatabaseName).Table("Endpoints").Insert(EN).RunNoReply(DB.Con);
+    }
+    public void DeleteEndpoint(int id)
+    {
+        if (!DB.Endpoints.TryGetValue(id, out Endpoint EN))
+            return;
+        DB.EndpointCache.Remove(EN.GetPath());
+        DB.Endpoints.Remove(id);
+        DB.R.Db(Program.DatabaseName).Table("Endpoints").Get(id).Delete().RunNoReply(DB.Con);
     }
 
     [CascadingParameter]
@@ -514,6 +678,9 @@
                 break;
             case "waifu":
                 DB.ReloadWaifuLewds();
+                break;
+            case "endpoint":
+                DB.ReloadEndpoints();
                 break;
         }
         ShowToast("Reloaded " + type);

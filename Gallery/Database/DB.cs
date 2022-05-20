@@ -23,6 +23,9 @@ namespace Gallery.Database
         public static Dictionary<int, GTag> Tags = new Dictionary<int, GTag>();
         public static Dictionary<string, ApiUser> Keys = new Dictionary<string, ApiUser>();
         public static List<GImage> WaifuLewds = new List<GImage>();
+        public static Dictionary<int, Endpoint> Endpoints = new Dictionary<int, Endpoint>();
+        public static Dictionary<string, int> EndpointCache = new Dictionary<string, int>();
+
         public static int WaifuLewdCount = 0;
         public static void ReloadWaifuLewds()
         {
@@ -96,6 +99,13 @@ namespace Gallery.Database
             Tags = tags.ToDictionary(x => x.id, x => x);
         }
 
+        public static void ReloadEndpoints()
+        {
+            Cursor<Endpoint> endpoints = R.Db(Program.DatabaseName).Table("Endpoints").RunCursor<Endpoint>(Con);
+            Endpoints = endpoints.ToDictionary(x => x.id, x => x);
+            EndpointCache = Endpoints.ToDictionary(x => x.Value.GetPath(), x => x.Key);
+        }
+
         public static void ReloadAPIKeys()
         {
             Cursor<ApiUser> keys = R.Db("API").Table("Users").RunCursor<ApiUser>(Con);
@@ -119,6 +129,7 @@ namespace Gallery.Database
             ReloadMetaData();
             ReloadTags();
             ReloadAPIKeys();
+            ReloadEndpoints();
             UserFeeds.Setup();
 
             Connected = true;

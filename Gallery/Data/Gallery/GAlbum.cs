@@ -80,6 +80,7 @@ namespace Gallery.Data
         {
             if (!Config.DevMode)
                 DB.R.Db(Program.DatabaseName).Table("Albums").Get(id).Update(this).RunNoReply(DB.Con);
+
         }
 
         public enum GalleryAccess

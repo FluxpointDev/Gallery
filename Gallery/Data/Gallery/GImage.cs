@@ -15,6 +15,13 @@ namespace Gallery.Data
         public int album = 0;
         public DateTime date = DateTime.UtcNow;
         public FileInfo file = new FileInfo();
+
+        public bool IsNsfw()
+        {
+            if (DB.Albums.TryGetValue(album, out GAlbum AB))
+                return AB.isNsfw;
+                return false;
+        }
         public class FileInfo
         {
             public string type;

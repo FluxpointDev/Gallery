@@ -15,7 +15,7 @@ namespace Gallery.Controllers
 {
     public class ApiImage : Response
     {
-        public ApiImage(GImage img) : base(200, "")
+        public ApiImage(GImage img, bool isNsfw) : base(200, isNsfw ? "This image is NSFW!" : "")
         {
             if (img == null)
                 return;
@@ -61,7 +61,7 @@ namespace Gallery.Controllers
 
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == id);
             int ID = Program.RNGBetween(0, List.Count() - 1);
-            return Ok(new ApiImage(List.ElementAt(ID)));
+            return Ok(new ApiImage(List.ElementAt(ID), album.isNsfw));
         }
 
         [HttpGet("/api/tag/{id}")]
@@ -74,123 +74,85 @@ namespace Gallery.Controllers
             if (!List.Any())
                 return BadRequest("This tag has no images");
             int ID = Program.RNGBetween(0, List.Length- 1);
-            return Ok(new ApiImage(List[ID]));
+            return Ok(new ApiImage(List[ID], tag.isNsfw));
+        }
+
+        [HttpGet("/api/sfw/img/{type}")]
+        public IActionResult GetSfw(string type)
+        {
+            if (!DB.EndpointCache.TryGetValue("/sfw/img/" + type, out int EndpintID))
+            {
+                return BadRequest("Invalid image type.");
+            }
+            DB.Endpoints.TryGetValue(EndpintID, out Endpoint EN);
+            if (EN == null)
+                return BadRequest("Api missing endpoint.");
+
+
+            IEnumerable<GImage> List = DB.Images.Values.Where(x => EN.albums.ContainsKey(x.album) || (x.tags.Any(x => EN.tags.ContainsKey(x)) && !x.IsNsfw()) );
+            int ID = Program.RNGBetween(0, List.Count() - 1);
+            GImage Image = List.ElementAt(ID);
+            if (Image.IsNsfw())
+                return BadRequest("Api error invalid image type");
+            return Ok(new ApiImage(Image, false));
         }
 
         [HttpGet("/api/sfw/gif/{type}")]
-        public IActionResult GetAction(string type)
+        public IActionResult GetSfwGif(string type)
         {
-            int Album = 0;
-            switch (type.ToLower())
+            if (!DB.EndpointCache.TryGetValue("/sfw/gif/" + type, out int EndpintID))
             {
-                case "hug":
-                    Album = 21;
-                    break;
-                case "pat":
-                    Album = 22;
-                    break;
-                case "feed":
-                    Album = 23;
-                    break;
-                case "bite":
-                    Album = 24;
-                    break;
-                case "highfive":
-                    Album = 25;
-                    break;
-                case "kiss":
-                    Album = 26;
-                    break;
-                case "lick":
-                    Album = 27;
-                    break;
-                case "poke":
-                    Album = 28;
-                    break;
-                case "punch":
-                    Album = 29;
-                    break;
-                case "slap":
-                    Album = 30;
-                    break;
-                case "tickle":
-                    Album = 31;
-                    break;
-                case "wasted":
-                    Album = 32;
-                    break;
-                case "wink":
-                    Album = 33;
-                    break;
-                case "wag":
-                    Album = 34;
-                    break;
-                case "fluff":
-                    Album = 35;
-                    break;
-                case "baka":
-                    Album = 36;
-                    break;
-                case "smug":
-                    Album = 37;
-                    break;
+                return BadRequest("Invalid image type.");
             }
-            if (Album != 0)
+            DB.Endpoints.TryGetValue(EndpintID, out Endpoint EN);
+            if (EN == null)
+                return BadRequest("Api error missing endpoint.");
+            if (EN.isNsfw)
+                return BadRequest("Api error invalid endpoint");
+
+            IEnumerable<GImage> List = DB.Images.Values.Where(x => EN.albums.ContainsKey(x.album) || (x.tags.Any(x => EN.tags.ContainsKey(x)) && !x.IsNsfw()) );
+            int ID = Program.RNGBetween(0, List.Count() - 1);
+            GImage Image = List.ElementAt(ID);
+            if (Image.IsNsfw())
+                return BadRequest("Api error invalid image type");
+
+            return Ok(new ApiImage(Image, false));
+        }
+
+        [HttpGet("/api/nsfw/img/{type}")]
+        public IActionResult GetNsfw(string type)
+        {
+            if (!DB.EndpointCache.TryGetValue("/nsfw/img/" + type, out int EndpintID))
             {
-                IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == Album);
-                int ID = Program.RNGBetween(0, List.Count() - 1);
-                return Ok(new ApiImage(List.ElementAt(ID)));
+                return BadRequest("Invalid image type.");
             }
-            return BadRequest("Invalid action type.");
+            DB.Endpoints.TryGetValue(EndpintID, out Endpoint EN);
+            if (EN == null)
+                return BadRequest("Api missing endpoint.");
+
+            IEnumerable<GImage> List = DB.Images.Values.Where(x => EN.albums.ContainsKey(x.album) || x.tags.Any(x => EN.tags.ContainsKey(x)));
+            int ID = Program.RNGBetween(0, List.Count() - 1);
+            return Ok(new ApiImage(List.ElementAt(ID), true));
         }
 
-        [HttpGet("/api/sfw/anime")]
-        public IActionResult GetSfwAnime()
+        [HttpGet("/api/nsfw/gif/{type}")]
+        public IActionResult GetNsfwGif(string type)
         {
-            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 5);
+            if (!DB.EndpointCache.TryGetValue("/nsfw/gif/" + type, out int EndpintID))
+            {
+                return BadRequest("Invalid image type.");
+            }
+            DB.Endpoints.TryGetValue(EndpintID, out Endpoint EN);
+            if (EN == null)
+                return BadRequest("Api missing endpoint.");
+
+            IEnumerable<GImage> List = DB.Images.Values.Where(x => EN.albums.ContainsKey(x.album) || x.tags.Any(x => EN.tags.ContainsKey(x)));
             int ID = Program.RNGBetween(0, List.Count() - 1);
-            return Ok(new ApiImage(List.ElementAt(ID)));
+            return Ok(new ApiImage(List.ElementAt(ID), true));
         }
 
-        [HttpGet("/api/sfw/wallpaper")]
-        public IActionResult GetSfwWallpaper()
-        {
-            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 6);
-            int ID = Program.RNGBetween(0, List.Count() - 1);
-            return Ok(new ApiImage(List.ElementAt(ID)));
-        }
 
-        [HttpGet("/api/sfw/azurlane")]
-        public IActionResult GetSfwAzurlane()
-        {
-            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 7);
-            int ID = Program.RNGBetween(0, List.Count() - 1);
-            return Ok(new ApiImage(List.ElementAt(ID)));
-        }
 
-        [HttpGet("/api/sfw/nekopara")]
-        public IActionResult GetSfwNekopara()
-        {
-            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 8);
-            int ID = Program.RNGBetween(0, List.Count() - 1);
-            return Ok(new ApiImage(List.ElementAt(ID)));
-        }
-
-        [HttpGet("/api/nsfw/azurlane")]
-        public IActionResult GetNsfwAzurlane()
-        {
-            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 11);
-            int ID = Program.RNGBetween(0, List.Count() - 1);
-            return Ok(new ApiImage(List.ElementAt(ID)));
-        }
-
-        [HttpGet("/api/nsfw/nekopara")]
-        public IActionResult GetNsfwNekopara()
-        {
-            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 10);
-            int ID = Program.RNGBetween(0, List.Count() - 1);
-            return Ok(new ApiImage(List.ElementAt(ID)));
-        }
 
         [HttpGet("/api/nsfw/waifulewd")]
         public IActionResult GetNsfwWaifuLewd()
@@ -199,16 +161,9 @@ namespace Gallery.Controllers
                 return BadRequest();
             
             GImage Img = DB.WaifuLewds.ElementAt(Program.RNGBetween(0, DB.WaifuLewdCount - 1));
-            return Ok(new ApiImage(Img));
+            return Ok(new ApiImage(Img, true));
         }
 
-        [HttpGet("/api/nsfw/lewd")]
-        public IActionResult GetNsfwLewd()
-        {
-            IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == 12);
-            int ID = Program.RNGBetween(0, List.Count() - 1);
-            return Ok(new ApiImage(List.ElementAt(ID)));
-        }
 
         [HttpPost("/api/upload/revolt")]
         public async Task<IActionResult> UploadRevoltImage(string type, string folder)
