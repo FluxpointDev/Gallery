@@ -3,9 +3,11 @@
 @using Gallery.Database
 @using BlazorContextMenu
 @using MatBlazor
+@using System.IO
 @inject AuthenticationStateProvider Authentication
 @inject IJSRuntime JSRuntime
 @inject IModalService Modal
+@inject IBlazorContextMenuService ContextService
 
 @if (albumid == "0")
 {
@@ -98,7 +100,7 @@ else
 
                      <a Id="@("link-" + order.id)" href="@("/album/" + albumid)" @onclick="@(() => ShowImage(order.id))">
                         
-                            <ContextMenuTrigger MenuId="dynamicmenu" Data="order">
+                            <ContextMenuTrigger MenuId="image-menu" Data="order">
                                  <div Id="@("card-" + order.id)" class="gimage">
                              <img id="@("img-" + order.id)" src="@order.GetImage(imageType.Thumbnail)" onerror="this.onerror=null;this.src='https://cdn.discordapp.com/attachments/275062423159963648/976286472900579378/no-image-min.png';" />
                          </div>
@@ -108,10 +110,25 @@ else
             </RadzenDataList>
             </div>
             <AlbumPaginator CurrentPage="CurrentPage" MaxPageCount="MaxPageCount" PageCountChanged="@((num) => OnPageCountChanged(num))"></AlbumPaginator>
-            <ContextMenu Animation="BlazorContextMenu.Animation.Zoom" CssClass="context-menu" Id="dynamicmenu" Context="order">
-                <a href="@((order.Data as GImage).GetImage(imageType.Full))" target="_blank"><Item><span class="oi oi-image" /> View Image</Item></a>
-                <a @onclick="@(() => DownloadImage((order.Data as GImage).GetImage(imageType.Download)))"><Item><span class="oi oi-link-intact" /> Copy Image URL</Item></a>
-                <a @onclick="@((mouse) => SaveText((order.Data as GImage).GetImage(imageType.Full)))"><Item><span class="oi oi-data-transfer-download" /> Download Image</Item></a>
+            <ContextMenu Animation="BlazorContextMenu.Animation.Slide" AutoHide="true" CssClass="context-menu" Id="image-menu" Context="order">
+                <Item><span class="iconify" data-icon="mdi:arrow-expand" style="color: #CFCECE;"></span> @((order.Data as GImage).file.width)x@((order.Data as GImage).file.height)  </Item>
+                <a href="@((order.Data as GImage).GetImage(imageType.Full))" target="_blank" @onclick="@(() => ContextService.HideMenu("image-menu"))"><Item><span class="iconify" data-icon="mdi:image" style="color: #7cc8cd;"></span> View Image</Item></a>
+                <Item OnClick="@(() => SaveText((order.Data as GImage).GetImage(imageType.Full)))"><span class="iconify" data-icon="mdi:link-variant" style="color: #F8DF61;"></span> Copy Image URL</Item>
+                <Item OnClick="@(() => DownloadImage((order.Data as GImage).GetImage(imageType.Download)))"><span class="iconify" data-icon="mdi:download" style="color: #3fb363;"></span> Download Image</Item>
+                @if (Session.State.User.Identity.IsAuthenticated && Session.State.User.GetId() == "190590364871032834")
+                {
+                    <Seperator />
+
+                    <Item><span class="iconify" data-icon="mdi:arrow-right-thick" style="color: #f48225;"></span> Move Image
+                        <SubMenu>
+                            @foreach(var a in DB.Albums.Values)
+                            {
+                                 <Item OnClick="@(() => MoveImage((order.Data as GImage), a))">@a.GetComboxName()</Item>
+                            }
+                            </SubMenu>
+                        </Item>
+                    <Item OnClick="@(() => DeleteImage((order.Data as GImage)))"><span class="iconify" data-icon="mdi:delete" style="color: #f43f43;"></span> Delete Image</Item>
+                }
             </ContextMenu>
         }
     }
@@ -222,6 +239,11 @@ border-radius: 4px;
 margin: 4px;
 padding: 2px;
 }
+
+.rz-paginator {
+    margin-left: 30px;
+    margin-right: 80px;
+}
 </style>
 
 
@@ -232,6 +254,8 @@ padding: 2px;
 
     [CascadingParameter]
     private Session Session { get; set; }
+
+    public ContextMenu ContextMenu {get; set; }
 
     RadzenDataList<GImage> ImageGrid;
 
@@ -251,7 +275,13 @@ padding: 2px;
         ScrollToTop();
         CurrentPage = value;
         ImageGrid.GoToPage(value);
+    }
 
+    public async Task MoveImage(GImage img, GAlbum album)
+    {
+        ContextService.HideMenu("image-menu");
+        img.album = album.id;
+        img.Update();
     }
 
     public void ToggleNsfw()
@@ -272,9 +302,12 @@ padding: 2px;
     }
 
     List<GAlbum> SubAlbums = null;
-
+    public bool FirstLoad = true;
     protected override async Task OnParametersSetAsync()
     {
+        if (FirstLoad)
+            JSRuntime.InvokeVoidAsync("KeyListen");
+        FirstLoad = false;
         Images = null;
         SubAlbums = null;
         Private = false;
@@ -322,7 +355,7 @@ padding: 2px;
                 if (GAlbum.isAPIOnly && !(Auth.User.Identity.IsAuthenticated && Auth.User.IsInRole("owner")))
                 {
                     GetAlbum = new GAlbum { id = 0, name = "API Only" };
-                        APIOnly = GetAlbum.isAPIOnly;
+                    APIOnly = GetAlbum.isAPIOnly;
                     Images = new List<GImage>();
                 }
                 else
@@ -354,18 +387,35 @@ padding: 2px;
 
     public async Task SaveText(string text)
     {
+        ContextService.HideMenu("image-menu");
         try
         {
             await JSRuntime.InvokeAsync<object>("writeToClipboardOnPermission", text);
         }
-        catch (Exception ex)
-        {
+        catch {}
 
-        }
     }
 
     public async Task DownloadImage(string url)
     {
+        ContextService.HideMenu("image-menu");
         await JSRuntime.InvokeAsync<object>("downloadURI", url);
+    }
+
+    public async Task DeleteImage(GImage img)
+    {
+        ContextService.HideMenu("image-menu");
+        DB.R.Db(Program.DatabaseName).Table("Images").Get(img.id).Delete().RunNoReply(DB.Con);
+
+        if (File.Exists(img.GetFile(imageType.Full)))
+            File.Delete(img.GetFile(imageType.Full));
+
+        if (File.Exists(img.GetFile(imageType.Medium)))
+            File.Delete(img.GetFile(imageType.Medium));
+
+        if (DB.Images.Values.Where(x => x.file.hash == img.file.hash).Any())
+            DB.HashSet.Remove(img.file.hash);
+
+        DB.Images.Remove(img.id);
     }
 }

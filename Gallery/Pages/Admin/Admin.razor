@@ -600,8 +600,9 @@
             if (File.Exists(Img.GetFile(imageType.Medium)))
                 File.Delete(Img.GetFile(imageType.Medium));
 
-            if (DB.Images.Values.Where(x => x.file.hash == Img.file.hash).Count() == 1)
+            if (DB.Images.Values.Where(x => x.file.hash == Img.file.hash).Any())
                 DB.HashSet.Remove(Img.file.hash);
+
             DB.Images.Remove(Image);
             Image = "";
             ShowToast("Image deleted", true);
