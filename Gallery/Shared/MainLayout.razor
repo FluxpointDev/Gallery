@@ -1,9 +1,9 @@
 ﻿@inherits LayoutComponentBase
-@using Blazored.Modal
 @using MatBlazor
+@using MudBlazor
 
-<BlazoredModal />
 <MatToastContainer />
+<MudDialogProvider/>
 
 <div class="sidebar">
     <NavMenu />
@@ -50,5 +50,87 @@
 }
 .blazor-context-menu  li:hover {
     background-color: #374151 !important;
+}
+.gbox {
+    padding: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    border-radius: 12px;
+    background-color: #2c2c2c !important;
+}
+.box-title {
+    margin-bottom: 10px;
+}
+.box-title h3 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #eee;
+    margin-left: 4px;
+    display: inline-block;
+    vertical-align: top;
+    margin-top: 4px;
+    font-family: BlinkMacSystemFont,-apple-system,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,Helvetica,Arial,sans-serif;
+}
+.box-title .iconify {
+    width: 40px;
+    height: 40px;
+    margin-bottom: -6px;
+    color: rgb(124, 200, 205);
+}
+.box-title .box-back {
+    background-color: #a84537;
+    border-radius: 8px;
+    padding: 4px;
+    color: white !important;
+}
+.box-title hr {
+    background-color: #585757;
+    margin-top: 10px;
+}
+
+.gbox-option {
+    width: 140px;
+    height: 140px;
+    display: inline-block;
+    margin-right: 6px;
+    margin-bottom: 6px;
+    background-color: #375a7f !important;
+    padding: 10px;
+    border-radius: 16px;
+}
+.gbox-option h5 {
+    text-align: center;
+    font-size: 1.25rem !important;
+    margin-top: 4px;
+    height: 45px;
+    font-family: BlinkMacSystemFont,-apple-system,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,Helvetica,Arial,sans-serif;
+}
+.gbox-option .iconify {
+    width: 50px;
+    height: 50px;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+
+.mud-dialog {
+    background-color: #1f2129 !important;
+}
+.mud-dialog .mud-typography-h6 {
+    color: white;
+}
+.mud-dialog-content {
+    color: rgb(208,208,208);
+}
+.mud-dialog .mud-button:hover {
+    background-color: #343740 !important;
+}
+
+.mud-dialog .mud-button-text-primary {
+    color: #3fb363 !important;
+}
+.mud-dialog .mud-button-text-default {
+    color: #e56351 !important;
 }
 </style>

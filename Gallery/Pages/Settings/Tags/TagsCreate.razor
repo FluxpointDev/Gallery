@@ -1,0 +1,26 @@
+﻿@using Gallery.Data
+@using Gallery.Database
+
+<div class="box-title">
+    <span class="iconify" data-icon="mdi:account-cog"></span>
+    <h3>Settings</h3>
+    <hr />
+</div>
+
+<RadzenTextBox @bind-Value="@NewTag" Name="ID" />
+<MudBlazor.MudButton @onclick="@AddTag">Add Tag</MudBlazor.MudButton>
+
+@code {
+    public string NewTag = "";
+    public void AddTag()
+    {
+        int id = DB.Tags.Values.OrderByDescending(x => x.id).First().id + 1;
+        GTag newtag = new GTag()
+            {
+                id = id,
+                name = NewTag
+            };
+        DB.Tags.Add(id, newtag);
+        newtag.Add();
+    }
+}

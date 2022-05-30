@@ -12,6 +12,7 @@ namespace Gallery.Controllers
         public string reddit = Config.Reddit;
         public string email = Config.Email;
         public string donate = Config.Patreon;
+        public string revolt = "https://app.revolt.chat/invite/J5Ras1J3";
     }
     public class Response
     {
@@ -44,11 +45,14 @@ namespace Gallery.Controllers
                 case ErrorType.Forbidden:
                     code = 403;
                     break;
+                case ErrorType.NotFound:
+                    code = 404;
+                    break;
             }
         }
     }
     public enum ErrorType
     {
-        InternalServerError, UnAuthorized, BadRequest, Forbidden
+        InternalServerError, UnAuthorized, BadRequest, Forbidden, NotFound
     }
 }

@@ -20,9 +20,9 @@ namespace Discord.OAuth2
             ClaimActions.MapJsonKey("urn:discord:discriminator", "discriminator", ClaimValueTypes.UInteger32);
             ClaimActions.MapJsonKey("urn:discord:avatar", "avatar", ClaimValueTypes.String);
         }
-        
+
         /// <summary> Gets or sets the Discord-assigned appId. </summary>
-        public string AppId { get => ClientId; set => ClientId = value; }        
+        public string AppId { get => ClientId; set => ClientId = value; }
         /// <summary> Gets or sets the Discord-assigned app secret. </summary>
         public string AppSecret { get => ClientSecret; set => ClientSecret = value; }
     }

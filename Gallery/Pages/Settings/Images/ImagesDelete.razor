@@ -1,0 +1,68 @@
+﻿@using Gallery.Data
+@using Gallery.Database
+@using System.IO
+
+<div class="box-title">
+    <span class="iconify" data-icon="mdi:image-remove"></span>
+    <h3>Settings</h3>
+    <hr />
+</div>
+
+<RadzenTextBox @bind-Value="@Image" Name="ID" />
+    <MatButton OnClick="@DeleteImage">Delete image</MatButton>
+
+@code {
+    [CascadingParameter]
+    public Session Session { get; set; }
+
+    public string Image;
+    void DeleteImage()
+    {
+        if (DB.Images.TryGetValue(Image, out GImage Img))
+        {
+            DB.Albums.TryGetValue(Img.album, out GAlbum album);
+            if (Session.State.User.GetId() != "190590364871032834")
+            {
+                if (album == null)
+                {
+                    ShowToast("Image does not have an album");
+                    return;
+                }
+                if (!(album.owner == Session.State.User.GetId() || album.access.ContainsKey(Session.State.User.GetId())))
+                {
+                    ShowToast("You do not have access to this image");
+                    return;
+                }
+            }
+            DB.R.Db(Program.DatabaseName).Table("Images").Get(Img.id).Delete().RunNoReply(DB.Con);
+
+            if (File.Exists(Img.GetFile(imageType.Full)))
+                File.Delete(Img.GetFile(imageType.Full));
+
+            if (File.Exists(Img.GetFile(imageType.Medium)))
+                File.Delete(Img.GetFile(imageType.Medium));
+
+            if (DB.Images.Values.Where(x => x.file.hash == Img.file.hash).Any())
+                DB.HashSet.Remove(Img.file.hash);
+
+            DB.Images.Remove(Image);
+            Image = "";
+            ShowToast("Image deleted", true);
+        }
+    }
+    public void ShowToast(string desc, bool force = false)
+    {
+        //Toaster.Add(desc, MatToastType.Success, "", "", config =>
+        //{
+        //    config.RequireInteraction = force;
+        //    config.ShowCloseButton = force;
+        //    config.ShowProgressBar = true;
+        //    config.MaximumOpacity = Convert.ToInt32(100);
+
+        //    config.ShowTransitionDuration = Convert.ToInt32(500);
+        //    config.VisibleStateDuration = Convert.ToInt32(8000);
+        //    config.HideTransitionDuration = Convert.ToInt32(500);
+        //});
+    }
+
+}

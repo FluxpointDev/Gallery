@@ -112,6 +112,13 @@ namespace Gallery.Controllers
             return Content(Newtonsoft.Json.JsonConvert.SerializeObject(new ErrorResponse(ErrorType.Forbidden, error), Newtonsoft.Json.Formatting.Indented));
         }
 
+        public ContentResult NotFound(string error)
+        {
+            Response.ContentType = "application/json";
+            Response.StatusCode = 404;
+            return Content(Newtonsoft.Json.JsonConvert.SerializeObject(new ErrorResponse(ErrorType.NotFound, error), Newtonsoft.Json.Formatting.Indented));
+        }
+
         public ContentResult CustomStatus(int code, string msg)
         {
             Response.ContentType = "application/json";

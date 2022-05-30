@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace Gallery.Database
@@ -153,7 +152,7 @@ namespace Gallery.Database
                     return null;
 
                 if (User == null)
-                    User =  New(id, name);
+                    User = New(id, name);
                 Users.Add(id, User);
                 if (User.Name != name)
                     User.Update();

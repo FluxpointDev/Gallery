@@ -1,3 +1,8 @@
+using Gallery.Data;
+using Gallery.Extensions;
+using IdGen;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -5,11 +10,6 @@ using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
-using Gallery.Data;
-using Gallery.Extensions;
-using IdGen;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
 
 namespace Gallery
 {

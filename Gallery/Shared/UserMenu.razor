@@ -7,10 +7,10 @@
         @Session.State.User.GetUser().username
         <br />
         <MatTooltip Tooltip="Favourites" Wrap="true" Position="MatTooltipPosition.Top">
-            <MatButton Class="menuicon menuicon-fav" Icon="favorite"></MatButton>
+            <a href="/settings/favourites"><MatButton Class="menuicon menuicon-fav" Icon="favorite"></MatButton></a>
         </MatTooltip>
         <MatTooltip Tooltip="Settings" Wrap="true" Position="MatTooltipPosition.Top">
-            <MatButton Class="menuicon menuicon-set" Icon="settings"></MatButton>
+            <a href="/settings"><MatButton Class="menuicon menuicon-set" Icon="settings"></MatButton></a>
         </MatTooltip>
         <MatTooltip Tooltip="Logout" Wrap="true" Position="MatTooltipPosition.Top">
             <a href="/logout"><MatButton Class="menuicon menuicon-logout" Icon="exit_to_app"></MatButton></a>

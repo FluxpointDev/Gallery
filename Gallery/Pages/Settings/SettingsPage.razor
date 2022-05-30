@@ -1,0 +1,328 @@
+﻿@page "/settings/{page?}/{option?}"
+@using Gallery.Database
+@using Gallery.Pages.Settings.Albums
+@using Gallery.Pages.Settings.Images
+@using Gallery.Pages.Settings.Tags
+@using Gallery.Pages.Settings.API
+@using MudBlazor
+@attribute [Authorize]
+
+<div class="gbox">
+    <MudPaper Class="d-flex flex-1">
+        <MudList Dense="true">
+            <MudNavMenu Dense="true" Color="Color.Info" Bordered="true">
+                <MudNavLink Href="/settings" Match="NavLinkMatch.All" Icon="@Icons.Filled.House">Settings</MudNavLink>
+                <MudNavLink Href="/settings/favs" Icon="@Icons.Filled.Favorite">Favourites</MudNavLink>
+                <MudNavLink Href="/settings/api" Match="NavLinkMatch.All" Icon="@Icons.Filled.Bolt">API</MudNavLink>
+                @if (AdminAccess)
+                {
+
+                    <MudNavLink Href="/settings/api/manage" Icon="@Icons.Filled.Bolt">API Manage</MudNavLink>
+                }
+                @if (UploadAccess)
+                {
+                    <MudNavGroup Title="Images" Icon="@Icons.Filled.Image" Expanded="true">
+                        <MudNavLink Href="/settings/images/upload">Upload</MudNavLink>
+                        <MudNavLink Href="/settings/images/manage">Manage</MudNavLink>
+                        <MudNavLink Href="/settings/images/delete">Delete</MudNavLink>
+                    </MudNavGroup>
+                }
+                @if (AdminAccess)
+                {
+                    <MudNavGroup Title="Albums" Icon="@Icons.Filled.Folder" Expanded="true">
+                        <MudNavLink Href="/settings/albums/create">Create</MudNavLink>
+                        <MudNavLink Href="/settings/albums/manage">Manage</MudNavLink>
+                        <MudNavLink Href="/settings/albums/delete">Delete</MudNavLink>
+                    </MudNavGroup>
+                    <MudNavGroup Title="Tags" Icon="@Icons.Filled.Bookmark" Expanded="true">
+                        <MudNavLink Href="/settings/tags/upload">Create</MudNavLink>
+                        <MudNavLink Href="/settings/tags/manage">Manage</MudNavLink>
+                        <MudNavLink Href="/settings/tags/delete">Delete</MudNavLink>
+                    </MudNavGroup>
+                }
+
+                <MudNavLink Href="/settings/report" Icon="@Icons.Filled.Flag">Report</MudNavLink>
+            </MudNavMenu>
+        </MudList>
+        <MudDivider Vertical="true" FlexItem="true" />
+        <div class="d-flex flex-column flex-grow-1 py-0">
+            
+            @if (string.IsNullOrEmpty(page))
+            {
+                <SettingsHome></SettingsHome>
+            }
+            else
+            {
+                switch (page)
+                {
+                    case "api":
+                        {
+                            switch (option)
+                            {
+                                case "manage":
+                                    @if (AdminAccess)
+                                    {
+                                        <APIManage></APIManage>
+                                    }
+                                    break;
+                                default:
+                                    <APIHome></APIHome>
+                                    break;
+                            }
+                        }
+                        break;
+                    case "images":
+                        {
+                            @if (UploadAccess)
+                            {
+                                switch (option)
+                                {
+                                    case "upload":
+                                        <ImagesUpload></ImagesUpload>
+                                        break;
+                                    case "manage":
+                                        <ImagesManage></ImagesManage>
+                                        break;
+                                    case "delete":
+                                        <ImagesDelete></ImagesDelete>
+                                        break;
+                                }
+                            }
+                        }
+                        break;
+                    case "albums":
+                        {
+                            @if (AdminAccess)
+                            {
+                                switch (option)
+                                {
+                                    case "create":
+                                        <AlbumsCreate></AlbumsCreate>
+                                        break;
+                                    case "manage":
+                                        <AlbumsManage></AlbumsManage>
+                                        break;
+                                    case "delete":
+                                        <AlbumsDelete></AlbumsDelete>
+                                        break;
+                                }
+                            }
+                        }
+
+
+                        break;
+                    case "tags":
+                        {
+                            @if (AdminAccess)
+                            {
+                                switch (option)
+                                {
+                                    case "create":
+                                        <TagsCreate></TagsCreate>
+                                        break;
+                                    case "manage":
+                                        <TagsManage></TagsManage>
+                                        break;
+                                    case "delete":
+                                        <TagsDelete></TagsDelete>
+                                        break;
+                                }
+                            }
+                        }
+                        break;
+                    default:
+                        {
+                            <div class="box-title">
+                                <span class="iconify" data-icon="mdi:cog"></span>
+                                <h3>Settings</h3>
+                                <hr />
+                            </div>
+
+                            <h4>Coming Soon</h4>
+                        }
+                        break;
+
+                }
+            }
+        </div>
+
+    </MudPaper>
+</div>
+
+<style>
+    .mud-list {
+        height: 92vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        position: sticky;
+        top: 0;
+        width: 140px !important;
+        min-width: 140px;
+        float: left !important;
+    }
+
+    .mud-nav-link .mud-nav-link-expand-icon {
+        fill: white !important;
+    }
+
+    .mud-list-padding {
+        border-radius: 12px 0 0 12px !important;
+        margin-left: -8px;
+        background-color: #303336 !important;
+        padding-left: 2px;
+    }
+
+    .flex-grow-1 {
+        margin-right: -8px;
+        margin-left: -1px;
+        border-radius: 0 12px 12px 0 !important;
+        border: 2px solid #303336;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .mud-nav-link {
+        margin-top: 6px;
+        margin-bottom: 2px;
+    }
+
+    .mud-expanded {
+        margin-top: 6px;
+        margin-bottom: 0px;
+    }
+
+    .mud-collapse-wrapper-inner .mud-navmenu .mud-nav-link {
+        margin-top: 2px;
+    }
+
+    .mud-nav-link-icon {
+        margin-left: -8px;
+        color: rgb(142,141,141) !important;
+    }
+
+    .mud-nav-link .mud-nav-link-text {
+        color: rgb(199,199,199) !important;
+    }
+
+    .mud-nav-link:hover {
+        background-color: #3b4147 !important;
+    }
+
+        .mud-nav-link:hover .mud-nav-link-text {
+            color: white !important;
+        }
+
+    .active .mud-nav-link-icon {
+        color: #4a86ff !important;
+    }
+
+    .active .mud-nav-link-text {
+        color: white !important;
+        font-weight: 600;
+    }
+
+    .active {
+        border-color: #4a86ff !important;
+        background-color: rgba(74,134,255,0.12) !important;
+    }
+
+    .d-flex {
+  display: block !important;
+    
+}
+    .py-0 {
+        min-height: 92vh;
+    margin-left: 132px;
+    }
+    .py-0 label {
+    margin-right: 10px;
+}
+
+    .py-0 .mb-4 {
+    margin-top: 20px;
+    margin-bottom: 6px !important;
+   }
+    .py-0 .rz-chkbox-box {
+        background-color: #3a474d !important;
+        border-color: #2f3136 !important;
+    }
+   .py-0 .mdc-button {
+    margin-top: 10px;
+    background-color: #1b6ec2 !important;
+    color: white !important;
+    max-width: 160px;
+   }
+    .py-0 .btn {
+        margin-top: 10px;
+        max-width: 160px;
+    }
+    .py-0 .mat-autocomplete-list-popup {
+        background-color: #2b2b36 !important;
+        color: white !important;
+        max-width: 400px;
+    }
+    .py-0 .mdc-list-item {
+        color: white !important;
+    }
+    .py-0 .mdc-list-item:hover {
+        background-color: #353744 !important;
+    }
+    .py-0 .mdc-text-field,  .mdc-select, .rz-textbox {
+        background-color: #3a474d !important;
+        border-color: #2f3136 !important;
+         max-width: 400px;
+        color: #ffffffb2 !important;
+    }
+     .py-0 .mdc-select__anchor {
+         background-color: #3a474d !important;
+        color: #ffffffb2 !important;
+    }
+    .py-0 .mdc-floating-label {
+        color: #ffffff !important;
+    }
+    .py-0 .mdc-text-field__input {
+        color: #ffffffb2 !important;
+    }
+    .py-0 .mdc-switch {
+        margin-right: 12px;
+    }
+.mdc-select__selected-text, .mdc-select__dropdown-icon  {
+     color: #ffffffb2 !important;
+    fill: white !important;
+}
+.mdc-paginator-range-buttons .mdc-icon-button .material-icons {
+    color: white !important;
+}
+.mdc-list, .mdc-list-item--selected {
+    background-color: #3a474d !important;
+        color: #ffffffb2 !important;
+}
+
+.mdc-list-item:hover {
+    background-color: #353744 !important;
+}
+
+</style>
+
+@code {
+    [CascadingParameter]
+    public Session Session { get; set; }
+
+    [Parameter]
+    public string page { get; set; }
+
+    [Parameter]
+    public string option { get; set; }
+
+    public bool AdminAccess;
+    public bool UploadAccess;
+
+    protected override void OnInitialized()
+    {
+        AdminAccess = Session.State.User.GetId() == "190590364871032834";
+        if (DB.GalleryUsers.TryGetValue(Session.State.User.GetId(), out Data.GUser User))
+            UploadAccess = User.upload.enabled;
+
+
+    }
+}

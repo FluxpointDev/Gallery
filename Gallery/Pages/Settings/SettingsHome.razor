@@ -1,0 +1,144 @@
+﻿@using Gallery.Data
+@using Gallery.Database
+@using ImageMagick
+@using MudBlazor
+@using Radzen
+@using System.IO
+
+<div class="box-title">
+    <span class="iconify" data-icon="mdi:cog"></span>
+    <h3>Settings</h3>
+    <hr />
+</div>
+
+<p>Hello <span>@Session.State.User.GetFullName()</span></p>
+@if (Session.State.User.GetId() == "190590364871032834")
+{
+    <div class="section-list">
+    <div class="mat-layout-grid">
+        <div class="mat-layout-grid-inner">
+            <div class="mat-layout-grid-cell">
+                <h5>Images: @DB.Images.Count</h5>
+            </div>
+            <div class="mat-layout-grid-cell">
+                <h5>Albums: @DB.Albums.Count</h5>
+            </div>
+            <div class="mat-layout-grid-cell">
+                <h5>Tags: @DB.Tags.Count</h5>
+            </div>
+        </div>
+    </div>
+</div>
+<br />
+<div class="section-list">
+    <RadzenButton Click=@(() => ReloadAction("tags")) Text="Reload Tags" ButtonStyle="ButtonStyle.Light" />
+    <RadzenButton Click=@(() => ReloadAction("images")) Text="Reload Images" ButtonStyle="ButtonStyle.Light" />
+    <RadzenButton Click=@(() => ReloadAction("albums")) Text="Reload Albums" ButtonStyle="ButtonStyle.Light" />
+    <RadzenButton Click=@(() => ReloadAction("metadata")) Text="Reload Metadata" ButtonStyle="ButtonStyle.Light" />
+    <RadzenButton Click=@(() => ReloadAction("users")) Text="Reload Users" ButtonStyle="ButtonStyle.Light" />
+    <RadzenButton Click=@(() => ReloadAction("api")) Text="Reload API" ButtonStyle="ButtonStyle.Light" />
+    <RadzenButton Click=@(() => ReloadAction("endpoint")) Text="Reload Endpoints" ButtonStyle="ButtonStyle.Light" />
+    <RadzenButton Click=@(() => ReloadAction("waifu")) Text="Reload Waifu Nsfw" ButtonStyle="ButtonStyle.Light" />
+</div>
+}
+
+
+@code {
+
+    [CascadingParameter]
+    public Session Session { get; set; }
+
+    public void ReloadAction(string type)
+    {
+        switch (type)
+        {
+            case "tags":
+                DB.ReloadTags();
+                break;
+            case "albums":
+                DB.ReloadAlbums();
+                break;
+            case "images":
+                DB.ReloadImages();
+                break;
+            case "metadata":
+                DB.ReloadMetaData();
+                break;
+            case "users":
+                DB.ReloadUsers();
+                break;
+            case "api":
+                DB.ReloadAPIKeys();
+                break;
+            case "waifu":
+                DB.ReloadWaifuLewds();
+                break;
+            case "endpoint":
+                DB.ReloadEndpoints();
+                break;
+        }
+        ShowToast("Reloaded " + type);
+    }
+
+    public void ShowToast(string desc, bool force = false)
+    {
+        //Toaster.Add(desc, MatToastType.Success, "", "", config =>
+        //{
+        //    config.RequireInteraction = force;
+        //    config.ShowCloseButton = force;
+        //    config.ShowProgressBar = true;
+        //    config.MaximumOpacity = Convert.ToInt32(100);
+
+        //    config.ShowTransitionDuration = Convert.ToInt32(500);
+        //    config.VisibleStateDuration = Convert.ToInt32(8000);
+        //    config.HideTransitionDuration = Convert.ToInt32(500);
+        //});
+    }
+
+
+    void TestClick()
+    {
+        if (Session.State.User.GetId() != "190590364871032834")
+        {
+            ShowToast("You do not have access");
+            return;
+        }
+        ShowToast("Thumbnails being regended");
+        MagickReadSettings ReadSettings = new MagickReadSettings { ColorType = ColorType.Optimize, FrameCount = 1, FrameIndex = 0 };
+        foreach (GImage i in DB.Images.Values)
+        {
+            if (File.Exists(i.GetFile(imageType.Medium)))
+                continue;
+            Console.WriteLine("REGEN: " + i.GetFile(imageType.Medium));
+            using (FileStream fi = File.OpenRead(i.GetFile(imageType.Full)))
+            {
+                using (MagickImage image = new MagickImage(fi, ReadSettings))
+                {
+                    image.Resize(792, 594);
+                    image.Write(i.GetFile(imageType.Medium), MagickFormat.WebP);
+                    //image.Resize(320, 320);
+                    //image.Write(i.GetFile(imageType.Thumbnail));
+                }
+            }
+        }
+        ShowToast("Thumbnails done!", true);
+    }
+
+    void CheckImages()
+    {
+        if (Session.State.User.GetId() != "190590364871032834")
+        {
+            ShowToast("You do not have access");
+            return;
+        }
+        ShowToast("Checking images", true);
+        foreach (GImage i in DB.Images.Values)
+        {
+            if (!File.Exists(i.GetFile(imageType.Full)))
+            {
+                ShowToast("Missing " + i.id, true);
+            }
+        }
+        ShowToast("Checking done!", true);
+    }
+}

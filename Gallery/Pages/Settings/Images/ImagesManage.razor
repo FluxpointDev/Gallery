@@ -1,7 +1,12 @@
 ﻿@using MatBlazor
 @using Gallery.Data
 @using Gallery.Database
-@inject AuthenticationStateProvider Authentication
+
+<div class="box-title">
+    <span class="iconify" data-icon="mdi:tooltip-image"></span>
+    <h3>Settings</h3>
+    <hr />
+</div>
 
 <MatTextField @bind-Value="@id" Label="ID"></MatTextField>
 <MatTextField @bind-Value="@author" Label="Discord ID"></MatTextField>
@@ -119,6 +124,9 @@
 </style>
 
 @code {
+    [CascadingParameter]
+    private Session Session { get; set; }
+
     string id = "";
     string author = "";
     string hash = "";
@@ -168,7 +176,7 @@
     AuthenticationState AuthUser = null;
     protected override async Task OnInitializedAsync()
     {
-        AuthUser = await Authentication.GetAuthenticationStateAsync();
+        AuthUser = Session.State;
         Albums = DB.Albums.Values.ToArray();
         Tags = DB.Tags.Values.ToArray();
     }

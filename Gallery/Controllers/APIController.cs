@@ -1,14 +1,13 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Microsoft.AspNetCore.Mvc;
-using Gallery.Data;
+﻿using Gallery.Data;
 using Gallery.Database;
-using System.Threading.Tasks;
-using System;
 using ImageMagick;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Drawing;
+using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Threading.Tasks;
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace Gallery.Controllers
@@ -32,17 +31,29 @@ namespace Gallery.Controllers
         [HttpGet("/api")]
         public ActionResult Index()
         {
-
             if (!Request.Headers.ContainsKey("Authorization") || !DB.Keys.TryGetValue(Request.Headers["Authorization"][0], out ApiUser User))
                 return Ok(new HomeResponse("Hello user"));
             else
                 return Ok(new HomeResponse($"Hello {User.Name} - {User.ID}"));
         }
 
-        [HttpGet("/api/list")]
-        public IActionResult ListAlbums()
+        [Route("/api/{test1?}/{test2?}/{test3?}")]
+        public ActionResult Fallback()
         {
-            return Ok();
+            return NotFound("This endpoint does not exists, read the docs https://bluedocs.page/fluxpoint");
+        }
+
+        [Route("/gen/{image?}"), HttpGet, HttpPost]
+        public IActionResult HintGen()
+        {
+            return BadRequest("You need to use api.fluxpoint.dev/gen/ instead.");
+        }
+
+        [HttpGet("/test/error")]
+        public IActionResult TestError()
+        {
+            throw new Exception("Test");
+            return Ok("Test");
         }
 
         [HttpGet("/api/album/{id}")]
@@ -51,7 +62,7 @@ namespace Gallery.Controllers
             if (!DB.Keys.TryGetValue(Request.Headers["Authorization"][0], out ApiUser User))
             {
                 return Unauthorized();
-                
+
             }
             if (!DB.Albums.TryGetValue(id, out GAlbum album))
                 return BadRequest("Unknown album");
@@ -73,7 +84,7 @@ namespace Gallery.Controllers
             GImage[] List = DB.Images.Values.Where(x => Albums.Contains(x.album) && x.tags.Contains(id) && (type == "all" || x.IsImageType(type == "gif"))).ToArray();
             if (!List.Any())
                 return BadRequest("This tag has no images");
-            int ID = Program.RNGBetween(0, List.Length- 1);
+            int ID = Program.RNGBetween(0, List.Length - 1);
             return Ok(new ApiImage(List[ID], tag.isNsfw));
         }
 
@@ -89,7 +100,7 @@ namespace Gallery.Controllers
                 return BadRequest("Api missing endpoint.");
 
 
-            IEnumerable<GImage> List = DB.Images.Values.Where(x => EN.albums.ContainsKey(x.album) || (x.tags.Any(x => EN.tags.ContainsKey(x)) && !x.IsNsfw()) );
+            IEnumerable<GImage> List = DB.Images.Values.Where(x => EN.albums.ContainsKey(x.album) || (x.tags.Any(x => EN.tags.ContainsKey(x)) && !x.IsNsfw()));
             int ID = Program.RNGBetween(0, List.Count() - 1);
             GImage Image = List.ElementAt(ID);
             if (Image.IsNsfw())
@@ -110,7 +121,7 @@ namespace Gallery.Controllers
             if (EN.isNsfw)
                 return BadRequest("Api error invalid endpoint");
 
-            IEnumerable<GImage> List = DB.Images.Values.Where(x => EN.albums.ContainsKey(x.album) || (x.tags.Any(x => EN.tags.ContainsKey(x)) && !x.IsNsfw()) );
+            IEnumerable<GImage> List = DB.Images.Values.Where(x => EN.albums.ContainsKey(x.album) || (x.tags.Any(x => EN.tags.ContainsKey(x)) && !x.IsNsfw()));
             int ID = Program.RNGBetween(0, List.Count() - 1);
             GImage Image = List.ElementAt(ID);
             if (Image.IsNsfw())
@@ -159,7 +170,7 @@ namespace Gallery.Controllers
         {
             if (DB.WaifuLewdCount == 0)
                 return BadRequest();
-            
+
             GImage Img = DB.WaifuLewds.ElementAt(Program.RNGBetween(0, DB.WaifuLewdCount - 1));
             return Ok(new ApiImage(Img, true));
         }
@@ -215,7 +226,7 @@ namespace Gallery.Controllers
             string ImageName = url.Split('/').Last().Split('.').First();
             MagickFormat Format = MagickFormat.A;
             string FormatName = url.Split('.').Last().Split('?').First().ToLower();
-            
+
 
             string Hash = Program.getMd5Hash(Bytes);
             if (album == "19")

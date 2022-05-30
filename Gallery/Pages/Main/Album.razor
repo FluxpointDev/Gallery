@@ -4,10 +4,11 @@
 @using BlazorContextMenu
 @using MatBlazor
 @using System.IO
+@using MudBlazor
 @inject AuthenticationStateProvider Authentication
 @inject IJSRuntime JSRuntime
-@inject IModalService Modal
 @inject IBlazorContextMenuService ContextService
+@inject IDialogService DialogService
 
 @if (albumid == "0")
 {
@@ -33,8 +34,8 @@ else if (GetAlbum.isNsfw && !Session.Nsfw)
     </div>
 }
 else if (APIOnly)
-    {
-        <h3>This album is limited to the API only.</h3>
+{
+    <h3>This album is limited to the API only.</h3>
 }
 else
 {
@@ -54,60 +55,63 @@ else
         }
         @if (SubAlbums != null)
         {
+            <div class="ggrid">
+                @foreach (GAlbum a in SubAlbums)
+                {
+                    <a href="@("/album/" + a.id.ToString())">
+                        <div class="galbum">
+                            <div class="galbum-inner" style="background-image: url('@a.GetThumbnailImage()'), linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.3));">
+                                <div class="gablum-header">
+                                    @if (a.isNsfw)
+                                    {
+                                        <span class="iconify" data-icon="mdi:folder-heart" style="color: #c07ec8;"></span>
+                                        <h3 class="gablum-title">@a.name <p class="galbum-badge galbum-badge-nsfw">Nsfw</p>   </h3>
 
-        <div class="ggrid">
-        @foreach (GAlbum a in SubAlbums)
-        {
-        <a href="@("/album/" + a.id.ToString())">
-                <div class="galbum">
-                    <div class="galbum-inner" style="background-image: url('@a.GetThumbnailImage()'), linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.3));">
-                        <div class="gablum-header">
-                            @if (a.isNsfw)
-                            {
-                                  <span class="iconify" data-icon="mdi:folder-heart" style="color: #c07ec8;"></span>
-                        <h3 class="gablum-title">@a.name <p class="galbum-badge galbum-badge-nsfw">Nsfw</p>   </h3>
-                           
-                            }
-                            else if (!a.isPublic)
-                            {
-                                <span class="iconify" data-icon="mdi:folder-star" style="color: #fab13e;"></span>
-                        <h3 class="gablum-title">@a.name <p class="galbum-badge galbum-badge-private">Private</p></h3>
-                        
-                            }
-                            else
-                            {
-                                 <span class="iconify" data-icon="mdi:folder" style="color: #7489d8;"></span>
-                          <h3 class="gablum-title">@a.name</h3>         
-                             }
-                    </div>
-                    </div>
-               </div>
-           </a>
+                                    }
+                                    else if (!a.isPublic)
+                                    {
+                                        <span class="iconify" data-icon="mdi:folder-star" style="color: #fab13e;"></span>
+                                        <h3 class="gablum-title">@a.name <p class="galbum-badge galbum-badge-private">Private</p></h3>
+
+                                    }
+                                    else
+                                    {
+                                        <span class="iconify" data-icon="mdi:folder" style="color: #7489d8;"></span>
+                                        <h3 class="gablum-title">@a.name</h3>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+
         }
-        </div>
-       
-}
         if (Images.Count() == 0)
         {
             <p>This album has no images :(</p>
         }
         else
         {
+            <MudOverlay Class="album-popup-image" @bind-Visible="ToggleOverlay" LockScroll="true" AutoClose="true">
+                    <img src="@SelectedImage" style="max-height: 90%; max-width: 90%;" />
+                </MudOverlay>
             <iframe id="dliframe" style="display:none"></iframe>
             <div class="ggrid">
-            <RadzenDataList @ref="ImageGrid" EmptyText="This album has no images :(" WrapItems="true" @bind-PageNumbersCount="@CurrentPage" @bind-PageSize="@PageSize" LoadData="@LoadData" AllowPaging="true" Data="@Selected" TItem="GImage">
-                <Template Context="order">
+                
+                <RadzenDataList @ref="ImageGrid" EmptyText="This album has no images :(" WrapItems="true" @bind-PageNumbersCount="@CurrentPage" @bind-PageSize="@PageSize" LoadData="@LoadData" AllowPaging="true" Data="@Selected" TItem="GImage">
+                    <Template Context="order">
 
-                     <a Id="@("link-" + order.id)" href="@("/album/" + albumid)" @onclick="@(() => ShowImage(order.id))">
-                        
+                        <a Id="@("link-" + order.id)" href="@("/album/" + albumid)" @onclick="@(() => ShowImage(order.id))">
+
                             <ContextMenuTrigger MenuId="image-menu" Data="order">
-                                 <div Id="@("card-" + order.id)" class="gimage">
-                             <img id="@("img-" + order.id)" src="@order.GetImage(imageType.Thumbnail)" onerror="this.onerror=null;this.src='https://cdn.discordapp.com/attachments/275062423159963648/976286472900579378/no-image-min.png';" />
-                         </div>
+                                <div Id="@("card-" + order.id)" class="gimage">
+                                    <img id="@("img-" + order.id)" src="@order.GetImage(imageType.Thumbnail)" onerror="this.onerror=null;this.src='https://cdn.discordapp.com/attachments/275062423159963648/976286472900579378/no-image-min.png';" />
+                                </div>
                             </ContextMenuTrigger>
                         </a>
-                </Template>
-            </RadzenDataList>
+                    </Template>
+                </RadzenDataList>
             </div>
             <AlbumPaginator CurrentPage="CurrentPage" MaxPageCount="MaxPageCount" PageCountChanged="@((num) => OnPageCountChanged(num))"></AlbumPaginator>
             <ContextMenu Animation="BlazorContextMenu.Animation.Slide" AutoHide="true" CssClass="context-menu" Id="image-menu" Context="order">
@@ -118,15 +122,42 @@ else
                 @if (Session.State.User.Identity.IsAuthenticated && Session.State.User.GetId() == "190590364871032834")
                 {
                     <Seperator />
-
-                    <Item><span class="iconify" data-icon="mdi:arrow-right-thick" style="color: #f48225;"></span> Move Image
+                    <Item>
+                        <span class="iconify" data-icon="mdi:arrow-right-thick" style="color: #f48225;"></span> Move Image
                         <SubMenu>
-                            @foreach(var a in DB.Albums.Values)
+                            @foreach (var a in DB.Albums.Values.OrderBy(x => x.name))
                             {
-                                 <Item OnClick="@(() => MoveImage((order.Data as GImage), a))">@a.GetComboxName()</Item>
+                                if (a.subAlbum != 0)
+                                    continue;
+                                if (a.isSubAlbum)
+                                {
+                                    <Item>
+                                        <span class="iconify" data-icon="mdi:arrow-right-thick" style="color: #f48225;"></span> @a.name
+                                        <SubMenu>
+                                            @foreach (var s in DB.Albums.Values.Where(x => x.subAlbum == a.id).OrderBy(x => x.name))
+                                            {
+                                                <Item OnClick="@(() => MoveImage((order.Data as GImage), s))">@s.GetComboxName()</Item>
+                                            }
+                                        </SubMenu>
+                                    </Item>
+                                }
+                                else
+                                {
+                                    <Item OnClick="@(() => MoveImage((order.Data as GImage), a))">@a.GetComboxName()</Item>
+                                }
+
                             }
-                            </SubMenu>
-                        </Item>
+                        </SubMenu>
+                    </Item>
+                    <Item>
+                        <span class="iconify" data-icon="mdi:arrow-right-thick" style="color: #d0bb41;"></span> Options
+                        <SubMenu>
+                            <Item OnClick="@(() => SetAlbumCover((order.Data as GImage)))"><span class="iconify" data-icon="mdi:delete" style="color: #f43f43;"></span> Set Album Cover</Item>
+                        </SubMenu>
+                    </Item>
+                }
+                @if (GetAlbum.HasDeleteAccess(Session))
+                {
                     <Item OnClick="@(() => DeleteImage((order.Data as GImage)))"><span class="iconify" data-icon="mdi:delete" style="color: #f43f43;"></span> Delete Image</Item>
                 }
             </ContextMenu>
@@ -135,19 +166,22 @@ else
 }
 
 <style>
-    
-
-    .blazored-modal {
-        padding: 0px !important;
-        border-color: #0b2263;
-    }
 
     .blazor-context-menu {
         border-radius: 5px;
         box-shadow: none;
         border: 1px solid #616161;
         background-color: #404448;
+        -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;
     }
+
+    .blazor-context-submenu {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;
+    box-shadow: none;
+border: 1px solid #616161;
+}
 
     /* Dark theme context menu */
     .blazor-context-menu {
@@ -179,70 +213,88 @@ else
         margin-left: 20px;
     }
 
-.rz-paginator-page {
-    border: none !important;
+    .rz-paginator-page {
+        border: none !important;
         background-color: #45474d !important;
-    color: white !important;
-}
+        color: white !important;
+    }
 
-.rz-state-active {
-    padding-left: 8px !important;
-    padding-right: 8px !important;
-    color: #8ca1ef !important;
-}
+    .rz-state-active {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+        color: #8ca1ef !important;
+    }
+
     .rz-paginator {
         border: none;
         background-color: #383232 !important;
         position: sticky !important;
-    bottom: 0 !important;
+        bottom: 0 !important;
     }
-.rz-paginator-prev, .rz-paginator-first {
-    background-color: #479cc8 !important;
-    color: white;
-}
+
+    .rz-paginator-prev, .rz-paginator-first {
+        background-color: #479cc8 !important;
+        color: white;
+    }
 
     /* Nsfw warning */
     .nsfw-warning {
+        position: fixed;
+        top: 20%;
+        left: 30%;
+        width: 50%;
+        height: 50%;
+        z-index: 1;
+        padding: 10px;
+        background: rgb(1,1, 1, 0.6)
+    }
+
+        .nsfw-warning h3 {
+            padding-bottom: 20px;
+        }
+
+    .btn-adult {
+        margin-top: 10px;
+        opacity: 0.4;
+        background-color: rgba(128,128,128) !important;
+    }
+
+    .btn-exit {
+        margin-top: 10px;
+        background-color: rgb(215,52,52) !important;
+    }
+
+    .nsfw-blur img {
+        width: 100%;
+        height: 100%;
+    }
+
+    a > div {
+        width: 240px;
+        height: 240px;
+        display: inline-block;
+        vertical-align: top;
+        border-radius: 4px;
+        margin: 4px;
+        padding: 2px;
+    }
+
+    .rz-paginator {
+        margin-left: 30px;
+        margin-right: 80px;
+    }
+
+
+    .album-popup-image {
+    background-color: rgba(0,0,0,0.4);
+}
+.album-popup-image img {
     position: fixed;
-    top: 20%;
-    left: 30%;
-    width: 50%;
-    height: 50%;
-    z-index: 1;
-    padding: 10px;
-    background: rgb(1,1, 1, 0.6)
-}
-.nsfw-warning h3 {
-    padding-bottom: 20px;
-}
-.btn-adult {
-    margin-top: 10px;
-    opacity: 0.4;
-  background-color: rgba(128,128,128) !important;
-}
-
-.btn-exit {
-    margin-top: 10px;
-    background-color: rgb(215,52,52) !important;
-}
-.nsfw-blur img {
-    width: 100%;
-    height: 100%;
-}
-
-a > div {
-    width: 240px;
-height: 240px;
-display: inline-block;
-vertical-align: top;
-border-radius: 4px;
-margin: 4px;
-padding: 2px;
-}
-
-.rz-paginator {
-    margin-left: 30px;
-    margin-right: 80px;
+    bottom: 0;
+    left: 0;
+  margin: auto;
+    right: 0;
+    top: 0;
 }
 </style>
 
@@ -255,9 +307,12 @@ padding: 2px;
     [CascadingParameter]
     private Session Session { get; set; }
 
-    public ContextMenu ContextMenu {get; set; }
+    public ContextMenu ContextMenu { get; set; }
 
     RadzenDataList<GImage> ImageGrid;
+
+    public string SelectedImage;
+    public bool ToggleOverlay = false;
 
     public int PageSize = 12;
     public int CurrentPage = 0;
@@ -280,6 +335,17 @@ padding: 2px;
     public async Task MoveImage(GImage img, GAlbum album)
     {
         ContextService.HideMenu("image-menu");
+        if (GetAlbum.isNsfw && !album.isNsfw)
+        {
+            var Result = await DialogService.ShowMessageBox("Move Image?", "You are moving an nsfw image into a sfw album, do you want to continue", "Yes", "", "No");
+            if (Result.HasValue && Result.Value)
+            {
+                img.album = album.id;
+                img.Update();
+            }
+            return;
+        }
+
         img.album = album.id;
         img.Update();
     }
@@ -289,16 +355,21 @@ padding: 2px;
         Session.Nsfw = true;
     }
 
+    public void SetAlbumCover(GImage img)
+    {
+        ContextService.HideMenu("image-menu");
+        DB.Albums[img.album].thumbnailImage = img.id;
+        DB.Albums[img.album].Update();
+    }
+
     void ShowImage(string imageid)
     {
-        var parameters = new ModalParameters();
-        parameters.Add("ImageId", imageid);
-
-        Modal.Show<ImagePopup>("View Image", parameters, new ModalOptions
+        ContextService.HideMenu("image-menu");
+        if (Database.DB.Images.TryGetValue(imageid, out GImage GetImage))
         {
-            HideHeader = true
-        });
-
+            SelectedImage = GetImage.GetImage(imageType.Full);
+            ToggleOverlay = true;
+        }
     }
 
     List<GAlbum> SubAlbums = null;
@@ -329,7 +400,6 @@ padding: 2px;
             {
                 SubAlbums = DB.Albums.Values.Where(x => x.subAlbum == GAlbum.id && x.HasAccess(Session)).OrderBy(x => x.name).ToList();
             }
-            var Auth = await Authentication.GetAuthenticationStateAsync();
             if (!GAlbum.isPublic)
             {
                 bool Access = GAlbum.HasAccess(Session);
@@ -352,7 +422,7 @@ padding: 2px;
             else
             {
 
-                if (GAlbum.isAPIOnly && !(Auth.User.Identity.IsAuthenticated && Auth.User.IsInRole("owner")))
+                if (GAlbum.isAPIOnly && !(Session.State.User.Identity.IsAuthenticated && Session.State.User.IsInRole("owner")))
                 {
                     GetAlbum = new GAlbum { id = 0, name = "API Only" };
                     APIOnly = GetAlbum.isAPIOnly;
@@ -392,7 +462,7 @@ padding: 2px;
         {
             await JSRuntime.InvokeAsync<object>("writeToClipboardOnPermission", text);
         }
-        catch {}
+        catch { }
 
     }
 
@@ -405,17 +475,24 @@ padding: 2px;
     public async Task DeleteImage(GImage img)
     {
         ContextService.HideMenu("image-menu");
-        DB.R.Db(Program.DatabaseName).Table("Images").Get(img.id).Delete().RunNoReply(DB.Con);
+        if (!DB.Albums[img.album].HasDeleteAccess(Session))
+            return;
 
-        if (File.Exists(img.GetFile(imageType.Full)))
-            File.Delete(img.GetFile(imageType.Full));
+        var Result = await DialogService.ShowMessageBox("Delete Image?", "You are about to permanently delete this image!", "Yes", "", "No");
+        if (Result.HasValue && Result.Value)
+        {
+            DB.R.Db(Program.DatabaseName).Table("Images").Get(img.id).Delete().RunNoReply(DB.Con);
 
-        if (File.Exists(img.GetFile(imageType.Medium)))
-            File.Delete(img.GetFile(imageType.Medium));
+            if (File.Exists(img.GetFile(imageType.Full)))
+                File.Delete(img.GetFile(imageType.Full));
 
-        if (DB.Images.Values.Where(x => x.file.hash == img.file.hash).Any())
-            DB.HashSet.Remove(img.file.hash);
+            if (File.Exists(img.GetFile(imageType.Medium)))
+                File.Delete(img.GetFile(imageType.Medium));
 
-        DB.Images.Remove(img.id);
+            if (DB.Images.Values.Where(x => x.file.hash == img.file.hash).Any())
+                DB.HashSet.Remove(img.file.hash);
+
+            DB.Images.Remove(img.id);
+        }
     }
 }

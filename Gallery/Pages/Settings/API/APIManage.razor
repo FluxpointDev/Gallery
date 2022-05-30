@@ -1,0 +1,144 @@
+﻿@using Gallery.Data
+@using Gallery.Database
+<div class="box-title">
+    <span class="iconify" data-icon="mdi:lightning-bolt-circle"></span>
+    <h3>Settings</h3>
+    <hr />
+</div>
+
+<h4 class="mb-4">Path</h4>
+<RadzenTextBox @bind-Value="@EndpointPath" Name="Path" />
+<h4 class="mb-4">Is Gif</h4>
+<RadzenCheckBox @bind-Value=@EndpointGif Name="Is Gif" TValue="bool" />
+<h4 class="mb-4">Is Nsfw</h4>
+<RadzenCheckBox @bind-Value=@EndpointNsfw Name="Is Nsfw" TValue="bool" />
+<h4 class="mb-4">Albums</h4>
+<RadzenTextBox @bind-Value="@EndpointAlbums" Name="Albums" />
+<h4 class="mb-4">Tags</h4>
+<RadzenTextBox @bind-Value="@EndpointTags" Name="Tags" />
+<br />
+<MatButton OnClick="@AddEndpoint">Add</MatButton>
+<br />
+
+@foreach (var i in DB.Endpoints.Values)
+{
+    <div class="endpoint-item">
+        <span @onclick="@(() => DeleteEndpoint(i.id))">
+            <span class="iconify" data-icon="mdi:close-circle"></span>
+        </span>
+
+        @if (i.isNsfw)
+        {
+            <h3 class="endpoint-item-nsfw">@i.GetPath()</h3>
+        }
+        else
+        {
+            <h3 class="endpoint-item-sfw">@i.GetPath()</h3>
+        }
+        <div class="endpoint-albums">
+            <p>Albums: </p>
+            @foreach (var a in i.albums)
+            {
+                <a target="_blank" href="@("https://gallery.fluxpoint.dev/album/" + a.Key)"><div class="endpoint-album"><h4>@a.Key</h4></div></a>
+            }
+        </div>
+        <div class="endpoint-albums">
+            <p>Tags: </p>
+            @foreach (var a in i.tags)
+            {
+                <div class="endpoint-album"><h4>@a.Key</h4></div>
+            }
+        </div>
+    </div>
+}
+
+<style>
+    .endpoint-item {
+        background-color: #191919 !important;
+        border-radius: 6px;
+        margin-top: 6px;
+        margin-bottom: 6px;
+    }
+
+        .endpoint-item .iconify {
+            width: 26px;
+            height: 26px;
+            margin-bottom: -2px;
+            color: #f74d5a !important;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .endpoint-item h3 {
+            display: inline-block;
+            font-size: 18pt;
+            margin-top: 12px;
+            margin-bottom: 12px;
+            margin-left: 10px;
+        }
+
+    .endpoint-item-nsfw {
+        color: #da66ad !important;
+    }
+
+    .endpoint-item-sfw {
+        color: #62adca !important;
+    }
+
+    .endpoint-albums {
+        margin-left: 42px;
+        margin-right: 10px;
+        padding-bottom: 6px;
+    }
+
+    .endpoint-album h4 {
+        display: inline-block;
+        margin-right: 6px;
+        margin-bottom: 6px;
+        padding: 12px;
+        padding-top: 6px;
+        padding-bottom: 6px;
+        border-radius: 90px;
+        background-color: #2c2c2c !important;
+    }
+</style>
+
+@code {
+    public string EndpointPath;
+    public bool EndpointNsfw;
+    public bool EndpointGif;
+    public string EndpointAlbums;
+    public string EndpointTags;
+
+    public void AddEndpoint()
+    {
+        if (string.IsNullOrEmpty(EndpointPath) || (string.IsNullOrEmpty(EndpointAlbums) && string.IsNullOrEmpty(EndpointTags)))
+            return;
+        Endpoint EN = new Endpoint
+            {
+                id = DB.Endpoints.Keys.OrderByDescending(x => x).First() + 1,
+                isNsfw = EndpointNsfw,
+                path = EndpointPath,
+                isGifs = EndpointGif
+            };
+
+        if (!string.IsNullOrEmpty(EndpointAlbums))
+            EN.albums = EndpointAlbums.Split(',', StringSplitOptions.TrimEntries).ToDictionary(x => int.Parse(x), x => '.');
+        if (!string.IsNullOrEmpty(EndpointTags))
+            EN.tags = EndpointTags.Split(',', StringSplitOptions.TrimEntries).ToDictionary(x => int.Parse(x), x => '.');
+        DB.Endpoints.Add(EN.id, EN);
+        DB.EndpointCache.Add(EN.GetPath(), EN.id);
+        EndpointPath = "";
+        EndpointAlbums = "";
+        EndpointTags = "";
+        DB.R.Db(Program.DatabaseName).Table("Endpoints").Insert(EN).RunNoReply(DB.Con);
+    }
+    public void DeleteEndpoint(int id)
+    {
+        if (!DB.Endpoints.TryGetValue(id, out Endpoint EN))
+            return;
+        DB.EndpointCache.Remove(EN.GetPath());
+        DB.Endpoints.Remove(id);
+        DB.R.Db(Program.DatabaseName).Table("Endpoints").Get(id).Delete().RunNoReply(DB.Con);
+    }
+}

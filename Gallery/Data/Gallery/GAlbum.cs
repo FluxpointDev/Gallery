@@ -1,7 +1,6 @@
 ﻿using Gallery.Database;
 using Gallery.Shared;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Gallery.Data
 {
@@ -41,6 +40,21 @@ namespace Gallery.Data
             if (LoginOnly && !session.State.User.Identity.IsAuthenticated)
                 return false;
             return HasAccess(session.State.User.GetId());
+        }
+
+        public bool HasDeleteAccess(Session session)
+        {
+            if (!session.State.User.Identity.IsAuthenticated)
+                return false;
+
+            if (session.State.User.GetId() == "190590364871032834")
+                return true;
+
+            if (session.State.User.GetId() == owner)
+                return true;
+            if (access.TryGetValue(session.State.User.GetId(), out GalleryAccess ga) && ga == GalleryAccess.Manage)
+               return true;
+            return false;
         }
 
         public bool HasAccess(string id, bool api = false)

@@ -20,7 +20,7 @@ namespace Gallery.Data
         {
             if (DB.Albums.TryGetValue(album, out GAlbum AB))
                 return AB.isNsfw;
-                return false;
+            return false;
         }
         public class FileInfo
         {
@@ -30,7 +30,7 @@ namespace Gallery.Data
             public int height;
             public long size;
         }
-       
+
         public Dictionary<string, GComment> comments = new Dictionary<string, GComment>();
 
         public Options options = new Options();
@@ -44,7 +44,7 @@ namespace Gallery.Data
         public HashSet<GTag> GetTags()
         {
             HashSet<GTag> Tags = new HashSet<GTag>();
-            foreach(int t in tags)
+            foreach (int t in tags)
             {
                 if (DB.Tags.TryGetValue(t, out GTag tag))
                     Tags.Add(tag);

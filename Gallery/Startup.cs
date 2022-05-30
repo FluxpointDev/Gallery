@@ -1,25 +1,21 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+using Blazor.FileReader;
+using BlazorContextMenu;
+using EmbeddedBlazorContent;
+using Gallery.Data;
+using Gallery.Database;
+using MatBlazor;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Gallery.Data;
-using Blazor.FileReader;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.HttpOverrides;
-using Gallery.Database;
-using EmbeddedBlazorContent;
-using Microsoft.AspNetCore.ResponseCompression;
-using BlazorContextMenu;
-using Blazored.Modal;
-using Microsoft.AspNetCore.Components;
-using MatBlazor;
-using ImageMagick;
-using System.IO;
-using RethinkDb.Driver.Model;
+using MudBlazor.Services;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Gallery
 {
@@ -43,6 +39,7 @@ namespace Gallery
                     new[] { "application/octet-stream" });
             });
             services.AddMatBlazor();
+            services.AddMudServices();
             services.AddMatToaster(config =>
             {
                 config.Position = MatToastPosition.BottomRight;
@@ -62,7 +59,6 @@ namespace Gallery
             });
 
             services.AddFileReaderService(options => options.InitializeOnFirstCall = true);
-            services.AddBlazoredModal();
             services.AddAuthentication(options =>
             {
                 options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -138,27 +134,6 @@ namespace Gallery
                 RethinkUpdaterService RU = app.ApplicationServices.GetService<RethinkUpdaterService>();
                 RU.Start();
             }
-            _ = Task.Run(() =>
-            {
-                foreach(var i in System.IO.Directory.GetFiles(Config.GlobalPath + "med/"))
-                {
-                    if (!i.EndsWith(".webp"))
-                    {
-                        Console.WriteLine("Converted: " + i);
-                        string Split = i.Split('/').Last();
-                        MagickFormat Format = MagickFormat.Png;
-                        if (Split.EndsWith(".jpg") || Split.EndsWith(".jpeg"))
-                            Format = MagickFormat.Jpg;
-                        using (MagickImage image = new MagickImage(new MemoryStream(File.ReadAllBytes(i)), new MagickReadSettings { ColorType = ColorType.Optimize, Format = Format }))
-                        {
-                            image.Strip();
-                            image.Resize(792, 594);
-                            image.Write(Config.GlobalPath + "med/" + Split.Split('.').First() + ".webp", MagickFormat.WebP);
-                        }
-                        System.IO.File.Delete(i);
-                    }
-                }
-            });
             app.UseResponseCompression();
             app.UseForwardedHeaders(new ForwardedHeadersOptions
             {
@@ -167,7 +142,7 @@ namespace Gallery
             app.UseEmbeddedBlazorContent(typeof(MatBlazor.BaseMatComponent).Assembly);
             app.UseStaticFiles();
             app.UseAuthentication();
-            
+
             app.UseRouting();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
