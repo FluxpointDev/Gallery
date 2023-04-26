@@ -7,15 +7,27 @@ namespace Gallery.Database
     {
         [JsonProperty("id")]
         public string ID;
-        public string Name;
-        public string Token;
-        public DateTime Created;
-        public DateTime? Expire = null;
-        public bool Donator = false;
-        public bool Owner = false;
-        public bool Disabled = false;
-        public string GalleryUser = "";
-        public int GalleryUserID = 0;
+        private string RealToken;
+        private string EncryptedToken;
+        public string Token { get { return EncryptedToken; } set { EncryptedToken = value; RealToken = APICrypt.DecryptString(EncryptedToken); } }
+        public string GetRealToken()
+        {
+            return RealToken;
+        }
+        private string RealPublicToken;
+        private string EncryptedPublicToken;
+        public string PublicToken { get { return EncryptedPublicToken; } set { EncryptedPublicToken = value; RealPublicToken = APICrypt.DecryptString(EncryptedPublicToken); } }
+        public string GetRealPublicToken()
+        {
+            return RealPublicToken;
+        }
 
+        public DateTime Created;
+        public bool Disabled = false;
+
+        public bool IsOwner()
+        {
+            return ID == "190590364871032834";
+        }
     }
 }

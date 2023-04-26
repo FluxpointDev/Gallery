@@ -9,12 +9,12 @@ namespace Gallery.Data
     public static class Config
     {
         public const string Website = "https://fluxpoint.dev";
-        public const string Docs = "https://bluedocs.page/fluxpoint.dev";
+        public const string Docs = "https://docs.fluxpoint.dev/api";
         public const string Twitter = "https://twitter.com/FluxpointDev";
         public const string Reddit = "https://www.reddit.com/r/FluxpointDev/";
         public const string Email = "support@fluxpoint.dev";
         public const string Discord = "https://discord.gg/fluxpoint";
-        public const string Patreon = "https://www.patreon.com/fluxpointdev";
+        public const string Patreon = "https://patreon.com/fluxpointdev";
         public const ulong OwnerID = 190590364871032834;
 
         public static string ConfigPath { get; private set; }

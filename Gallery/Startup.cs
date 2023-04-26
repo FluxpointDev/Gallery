@@ -131,8 +131,8 @@ namespace Gallery
             if (Config.Tokens.ContainsKey("rethink.ip"))
             {
                 DB.Start();
-                RethinkUpdaterService RU = app.ApplicationServices.GetService<RethinkUpdaterService>();
-                RU.Start();
+                //RethinkUpdaterService RU = app.ApplicationServices.GetService<RethinkUpdaterService>();
+                //RU.Start();
             }
             app.UseResponseCompression();
             app.UseForwardedHeaders(new ForwardedHeadersOptions

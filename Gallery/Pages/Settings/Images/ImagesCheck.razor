@@ -1,0 +1,165 @@
+﻿@using MatBlazor
+@using Gallery.Data
+@using Gallery.Database
+
+<div class="box-title">
+    <span class="iconify" data-icon="mdi:tooltip-image"></span>
+    <h3>Settings</h3>
+    <hr />
+</div>
+
+<MatButton Unelevated="true" OnClick="@Click">Refresh</MatButton>
+<br />
+
+<div class="mat-layout-grid">
+    <div class="mat-layout-grid-inner">
+        <div class="mat-layout-grid-cell mat-layout-grid-cell-span-8">
+            <MatTable Items="@GetImagesList()" AllowSelection="true" RowClass="GImage" SelectionChanged="SelectionChangedEvent">
+                <MatTableHeader>
+                    <th></th>
+                    <th>Image ID</th>
+                    <th>Image Name</th>
+                    <th>Author</th>
+                </MatTableHeader>
+                <MatTableRow>
+                    <td>@GetNumber()</td>
+                    <td>@context.id</td>
+                    <td>@context.name</td>
+                    @if (context.author == "")
+                    {
+                        <td>N/A</td>
+                    }
+                    else if (DB.GalleryUsers.TryGetValue(context.author, out GUser user))
+                    {
+                        <td>@user.name (@context.author)</td>
+                    }
+                    else
+                    {
+                        <td>N/A (@context.author)</td>
+                    }
+                </MatTableRow>
+            </MatTable>
+
+        </div>
+        @if (SelectedId != "0")
+        {
+            <div class="mat-layout-grid-cells sidebar-cell">
+                <div class="sticky-cell">
+                    <a href="@SelectedImage()" target="_blank"><img src="@SelectedImage()" /></a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .mdc-icon-button .material-icons {
+        color: black;
+    }
+
+    .mdc-icon-button .material-icons {
+        color: black;
+    }
+
+    th {
+        color: white !important;
+    }
+
+    .mdc-paginator-container {
+        color: white !important;
+    }
+
+    .sticky-cell {
+        position: -webkit-sticky;
+        position: sticky;
+        top: 0;
+        padding: 10px;
+        min-width: 300px;
+    }
+
+        .sticky-cell img {
+            max-width: 300px !important;
+        }
+</style>
+
+@code {
+    [CascadingParameter]
+    private Session Session { get; set; }
+
+    string id = "";
+    string author = "";
+    string hash = "";
+    string name = "";
+
+
+    public int NumberRow = 0;
+    public int GetNumber()
+    {
+        NumberRow++;
+        return NumberRow;
+    }
+
+    public string NullValue(GTag tag)
+    {
+        return tag == null ? "" : tag.name;
+    }
+
+    public string NullValue(GAlbum album)
+    {
+        return album == null ? "" : album.GetComboxName();
+    }
+
+    MatTable<GImage> Context;
+   
+    GImage[] ImagesList = new GImage[0];
+    public GImage[] GetImagesList()
+    {
+        NumberRow = 0;
+        return ImagesList;
+    }
+    AuthenticationState AuthUser = null;
+    protected override async Task OnInitializedAsync()
+    {
+        AuthUser = Session.State;
+    }
+
+
+    void Click(MouseEventArgs e)
+    {
+        NumberRow = 0;
+        ImagesList = new GImage[0];
+        StateHasChanged();
+        List<GImage> List = new List<GImage>();
+        foreach (GImage i in DB.Images.Values)
+        {
+            if (i.file.height > 2000 && i.file.width < 1000)
+            List.Add(i);
+            if (i.file.height < 1000 && i.file.width > 2000)
+                List.Add(i);
+        }
+        ImagesList = List.ToArray();
+        StateHasChanged();
+    }
+
+    public string SelectedId = "0";
+    public string SelectedImage()
+    {
+        if (DB.Images.TryGetValue(SelectedId, out GImage img))
+            return img.GetImage(imageType.Thumbnail);
+        return "";
+    }
+
+    public void SelectionChangedEvent(object row)
+    {
+        NumberRow = 0;
+        if (row == null)
+        {
+            SelectedId = "0";
+        }
+        else
+        {
+            SelectedId = ((GImage)row).id;
+        }
+        this.StateHasChanged();
+    }
+}

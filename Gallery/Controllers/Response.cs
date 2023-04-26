@@ -26,7 +26,7 @@ namespace Gallery.Controllers
         }
 
         public bool success = false;
-        public int code = 200;
+        public int code = 500;
         public string message = "";
     }
 

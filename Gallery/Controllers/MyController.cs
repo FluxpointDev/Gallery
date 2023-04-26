@@ -7,6 +7,7 @@ namespace Gallery.Controllers
     public class MyController : ControllerBase
     {
         public new ApiUser User = null;
+        public bool IsPublicUse = false;
         public MyController()
         {
 

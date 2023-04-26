@@ -24,6 +24,18 @@ namespace Gallery.Controllers
         public string id = "";
         public string file = "";
     }
+    public class ApiImages : Response
+    {
+        public ApiImages(HashSet<GImage> imges, bool isNsfw) : base(200, isNsfw ? "This image is NSFW!" : "")
+        {
+            if (imges == null)
+                return;
+            ids = imges.Select(x => x.id).ToArray();
+            files = imges.Select(x => x.GetImage(imageType.Full)).ToArray();
+        }
+        public string[] ids;
+        public string[] files;
+    }
 
     [Route("/api/[controller]"), ApiController, IsAuthenticated]
     public class APIController : MyController
@@ -32,24 +44,30 @@ namespace Gallery.Controllers
         public ActionResult Index()
         {
             if (!Request.Headers.ContainsKey("Authorization") || !DB.Keys.TryGetValue(Request.Headers["Authorization"][0], out ApiUser User))
-                return Ok(new HomeResponse("Hello user"));
+                return Ok(new HomeResponse("Hello user, to get access to this API visit our website."));
             else
-                return Ok(new HomeResponse($"Hello {User.Name} - {User.ID}"));
+                return Ok(new HomeResponse($"Hello API user - {User.ID}"));
         }
 
         [Route("/api/{test1?}/{test2?}/{test3?}")]
         public ActionResult Fallback()
         {
-            return NotFound("This endpoint does not exists, read the docs https://bluedocs.page/fluxpoint");
+            return NotFound($"This endpoint does not exist, read the docs {Config.Docs} ( G-7 )");
         }
 
-        [Route("/gen/{image?}"), HttpGet, HttpPost]
+        [Route("/http_not_allowed")]
+        public ActionResult HttpNotAllowed()
+        {
+            return this.StatusCode(405, "You need to use https to use the API otherwise body content gets stripped from cloudflare redirect. ( G-6 )");
+        }
+
+        [Route("/api/gen/{image?}"), HttpGet, HttpPost]
         public IActionResult HintGen()
         {
-            return BadRequest("You need to use api.fluxpoint.dev/gen/ instead.");
+            return BadRequest("You need to use api.fluxpoint.dev/gen/ instead. ( G-5 )");
         }
 
-        [HttpGet("/test/error")]
+        [HttpGet("/api/test/error")]
         public IActionResult TestError()
         {
             throw new Exception("Test");
@@ -65,10 +83,10 @@ namespace Gallery.Controllers
 
             }
             if (!DB.Albums.TryGetValue(id, out GAlbum album))
-                return BadRequest("Unknown album");
+                return BadRequest("Unknown album. ( GL-1 )");
 
             if (!album.isPublic && !album.HasAccess(User.ID, true))
-                return BadRequest("This album is private");
+                return BadRequest("This album is private/restricted. ( GL-3 )");
 
             IEnumerable<GImage> List = DB.Images.Values.Where(x => x.album == id);
             int ID = Program.RNGBetween(0, List.Count() - 1);
@@ -79,87 +97,279 @@ namespace Gallery.Controllers
         public IActionResult GetTag(int id, string type = "all", string nsfw = "")
         {
             if (!DB.Tags.TryGetValue(id, out GTag tag))
-                return BadRequest("Unknown Tag");
+                return BadRequest("Unknown tag. ( GL-2 )");
+
             HashSet<int> Albums = nsfw == "true" ? DB.Albums.Values.Where(x => x.isPublic && x.isNsfw).Select(x => x.id).ToHashSet() : DB.Albums.Values.Where(x => x.isPublic && !x.isNsfw).Select(x => x.id).ToHashSet();
             GImage[] List = DB.Images.Values.Where(x => Albums.Contains(x.album) && x.tags.Contains(id) && (type == "all" || x.IsImageType(type == "gif"))).ToArray();
             if (!List.Any())
-                return BadRequest("This tag has no images");
+                return BadRequest("This tag has no images. ( GL-5 )");
             int ID = Program.RNGBetween(0, List.Length - 1);
             return Ok(new ApiImage(List[ID], tag.isNsfw));
         }
 
         [HttpGet("/api/sfw/img/{type}")]
-        public IActionResult GetSfw(string type)
+        public IActionResult GetSfw(string type, [FromQuery] int multi = 1)
         {
             if (!DB.EndpointCache.TryGetValue("/sfw/img/" + type, out int EndpintID))
             {
-                return BadRequest("Invalid image type.");
+                return BadRequest("Invalid image category. ( GL-6)");
             }
             DB.Endpoints.TryGetValue(EndpintID, out Endpoint EN);
             if (EN == null)
-                return BadRequest("Api missing endpoint.");
-
+                return BadRequest("API error, invalid image endpoint. ( Gl-7 )");
+            if (EN.isNsfw)
+                return BadRequest("Api error, invalid endpoint type. ( GL-7 )");
 
             IEnumerable<GImage> List = DB.Images.Values.Where(x => EN.albums.ContainsKey(x.album) || (x.tags.Any(x => EN.tags.ContainsKey(x)) && !x.IsNsfw()));
-            int ID = Program.RNGBetween(0, List.Count() - 1);
-            GImage Image = List.ElementAt(ID);
-            if (Image.IsNsfw())
-                return BadRequest("Api error invalid image type");
-            return Ok(new ApiImage(Image, false));
+            if (!List.Any())
+                return BadRequest("This tag/category has no images. ( GL-5 )");
+
+            if (multi == 1)
+            {
+                int ID = Program.RNGBetween(0, List.Count() - 1);
+                GImage Image = List.ElementAt(ID);
+                if (Image.IsNsfw())
+                    return BadRequest("Api error, invalid image type. ( GL-8 )");
+                return Ok(new ApiImage(Image, false));
+            }
+            else
+            {
+                if (IsPublicUse)
+                    return Unauthorized("You are not allowed to use this with the public token");
+
+                DB.Keys.TryGetValue(Request.Headers["Authorization"][0], out ApiUser User);
+                if (!(User.ID == "190590364871032834" || User.ID == "729873770990534766"))
+                    return Unauthorized("You do not have access to multi image selection.");
+
+                if (multi < 1)
+                    return BadRequest("Multi parameter can't be less than 1");
+                if (multi > 10)
+                    return BadRequest("Multi parameter can't be more than 10");
+
+                int MaxCount = List.Count();
+                int MultiCount = multi;
+                if (MaxCount < MultiCount)
+                    MultiCount = MaxCount;
+
+                MultiCount += 1;
+
+                HashSet<GImage> Images = new HashSet<GImage>();
+                while (Images.Count != multi)
+                {
+                    if (Images.Count == MaxCount)
+                        break;
+                    int ID = Program.RNGBetween(0, MaxCount - 1);
+                    GImage Img = List.ElementAt(ID);
+                    if (Images.Contains(Img))
+                    {
+                        Img = List.ElementAtOrDefault(ID);
+                    }
+                        
+                    if (Img == null || Img.IsNsfw())
+                    {
+                        continue;
+                    }
+                    Images.Add(Img);
+                }
+                return Ok(new ApiImages(Images, false));
+            }
+
         }
 
         [HttpGet("/api/sfw/gif/{type}")]
-        public IActionResult GetSfwGif(string type)
+        public IActionResult GetSfwGif(string type, [FromQuery] int multi = 1)
         {
             if (!DB.EndpointCache.TryGetValue("/sfw/gif/" + type, out int EndpintID))
-            {
-                return BadRequest("Invalid image type.");
-            }
+                return BadRequest("Invalid image category. ( GL-6 )");
+
             DB.Endpoints.TryGetValue(EndpintID, out Endpoint EN);
             if (EN == null)
-                return BadRequest("Api error missing endpoint.");
+                return BadRequest("API error, invalid image endpoint. ( GL-7 )");
             if (EN.isNsfw)
-                return BadRequest("Api error invalid endpoint");
+                return BadRequest("Api error, invalid endpoint type. ( GL-7 )");
 
             IEnumerable<GImage> List = DB.Images.Values.Where(x => EN.albums.ContainsKey(x.album) || (x.tags.Any(x => EN.tags.ContainsKey(x)) && !x.IsNsfw()));
-            int ID = Program.RNGBetween(0, List.Count() - 1);
-            GImage Image = List.ElementAt(ID);
-            if (Image.IsNsfw())
-                return BadRequest("Api error invalid image type");
+            if (!List.Any())
+                return BadRequest("This tag/category has no images. ( GL-5 )");
 
-            return Ok(new ApiImage(Image, false));
+            if (multi == 1)
+            {
+                int ID = Program.RNGBetween(0, List.Count() - 1);
+                GImage Image = List.ElementAt(ID);
+                if (Image.IsNsfw())
+                    return BadRequest("Api error, invalid image type. ( GL-8 )");
+                return Ok(new ApiImage(Image, false));
+            }
+            else
+            {
+                if (IsPublicUse)
+                    return Unauthorized("You are not allowed to use this with the public token");
+
+                DB.Keys.TryGetValue(Request.Headers["Authorization"][0], out ApiUser User);
+                if (!(User.ID == "190590364871032834" || User.ID == "729873770990534766"))
+                    return Unauthorized("You do not have access to multi image selection.");
+
+                if (multi < 1)
+                    return BadRequest("Multi parameter can't be less than 1");
+                if (multi > 10)
+                    return BadRequest("Multi parameter can't be more than 10");
+
+                int MaxCount = List.Count();
+                int MultiCount = multi;
+                if (MaxCount < MultiCount)
+                    MultiCount = MaxCount;
+
+                MultiCount += 1;
+
+                HashSet<GImage> Images = new HashSet<GImage>();
+                while (Images.Count != multi)
+                {
+                    if (Images.Count == MaxCount)
+                        break;
+                    int ID = Program.RNGBetween(0, MaxCount - 1);
+                    GImage Img = List.ElementAt(ID);
+                    if (Images.Contains(Img))
+                    {
+                        Img = List.ElementAtOrDefault(ID);
+                    }
+
+                    if (Img == null || Img.IsNsfw())
+                    {
+                        continue;
+                    }
+                    Images.Add(Img);
+                }
+                return Ok(new ApiImages(Images, false));
+            }
         }
 
         [HttpGet("/api/nsfw/img/{type}")]
-        public IActionResult GetNsfw(string type)
+        public IActionResult GetNsfw(string type, [FromQuery] int multi = 1)
         {
             if (!DB.EndpointCache.TryGetValue("/nsfw/img/" + type, out int EndpintID))
-            {
-                return BadRequest("Invalid image type.");
-            }
+                return BadRequest("Invalid image category. ( GL-6 )");
+
             DB.Endpoints.TryGetValue(EndpintID, out Endpoint EN);
             if (EN == null)
-                return BadRequest("Api missing endpoint.");
+                return BadRequest("API error, invalid image endpoint. ( GL-7 )");
+            if (!EN.isNsfw)
+                return BadRequest("Api error, invalid endpoint type. ( GL-7 )");
 
             IEnumerable<GImage> List = DB.Images.Values.Where(x => EN.albums.ContainsKey(x.album) || x.tags.Any(x => EN.tags.ContainsKey(x)));
-            int ID = Program.RNGBetween(0, List.Count() - 1);
-            return Ok(new ApiImage(List.ElementAt(ID), true));
+            if (!List.Any())
+                return BadRequest("This tag/category has no images. ( GL-5 )");
+
+            if (multi == 1)
+            {
+                int ID = Program.RNGBetween(0, List.Count() - 1);
+                GImage Image = List.ElementAt(ID);
+                return Ok(new ApiImage(Image, true));
+            }
+            else
+            {
+                if (IsPublicUse)
+                    return Unauthorized("You are not allowed to use this with the public token");
+
+                DB.Keys.TryGetValue(Request.Headers["Authorization"][0], out ApiUser User);
+                if (!(User.ID == "190590364871032834" || User.ID == "729873770990534766"))
+                    return Unauthorized("You do not have access to multi image selection.");
+                if (multi < 1)
+                    return BadRequest("Multi parameter can't be less than 1");
+                if (multi > 10)
+                    return BadRequest("Multi parameter can't be more than 10");
+
+                int MaxCount = List.Count();
+                int MultiCount = multi;
+                if (MaxCount < MultiCount)
+                    MultiCount = MaxCount;
+
+                MultiCount += 1;
+
+                HashSet<GImage> Images = new HashSet<GImage>();
+                while (Images.Count != multi)
+                {
+                    if (Images.Count == MaxCount)
+                        break;
+                    int ID = Program.RNGBetween(0, MaxCount - 1);
+                    GImage Img = List.ElementAt(ID);
+                    if (Images.Contains(Img))
+                    {
+                        Img = List.ElementAtOrDefault(ID);
+                    }
+
+                    if (Img == null)
+                    {
+                        continue;
+                    }
+                    Images.Add(Img);
+                }
+                return Ok(new ApiImages(Images, true));
+            }
         }
 
         [HttpGet("/api/nsfw/gif/{type}")]
-        public IActionResult GetNsfwGif(string type)
+        public IActionResult GetNsfwGif(string type, [FromQuery] int multi = 1)
         {
             if (!DB.EndpointCache.TryGetValue("/nsfw/gif/" + type, out int EndpintID))
-            {
-                return BadRequest("Invalid image type.");
-            }
+                return BadRequest("Invalid image category. ( GL-6 )");
             DB.Endpoints.TryGetValue(EndpintID, out Endpoint EN);
             if (EN == null)
-                return BadRequest("Api missing endpoint.");
+                return BadRequest("API error, invalid image endpoint. ( GL-7 )");
+            if (!EN.isNsfw)
+                return BadRequest("Api error, invalid endpoint type. ( GL-7 )");
 
             IEnumerable<GImage> List = DB.Images.Values.Where(x => EN.albums.ContainsKey(x.album) || x.tags.Any(x => EN.tags.ContainsKey(x)));
-            int ID = Program.RNGBetween(0, List.Count() - 1);
-            return Ok(new ApiImage(List.ElementAt(ID), true));
+            if (!List.Any())
+                return BadRequest("This tag/category has no images. ( GL-5 )");
+
+            if (multi == 1)
+            {
+                int ID = Program.RNGBetween(0, List.Count() - 1);
+                GImage Image = List.ElementAt(ID);
+                return Ok(new ApiImage(Image, true));
+            }
+            else
+            {
+                if (IsPublicUse)
+                    return Unauthorized("You are not allowed to use this with the public token");
+
+                DB.Keys.TryGetValue(Request.Headers["Authorization"][0], out ApiUser User);
+                if (!(User.ID == "190590364871032834" || User.ID == "729873770990534766"))
+                    return Unauthorized("You do not have access to multi image selection.");
+
+                if (multi < 1)
+                    return BadRequest("Multi parameter can't be less than 1");
+                if (multi > 10)
+                    return BadRequest("Multi parameter can't be more than 10");
+
+                int MaxCount = List.Count();
+                int MultiCount = multi;
+                if (MaxCount < MultiCount)
+                    MultiCount = MaxCount;
+
+                MultiCount += 1;
+
+                HashSet<GImage> Images = new HashSet<GImage>();
+                while (Images.Count != multi)
+                {
+                    if (Images.Count == MaxCount)
+                        break;
+                    int ID = Program.RNGBetween(0, MaxCount - 1);
+                    GImage Img = List.ElementAt(ID);
+                    if (Images.Contains(Img))
+                    {
+                        Img = List.ElementAtOrDefault(ID);
+                    }
+
+                    if (Img == null)
+                    {
+                        continue;
+                    }
+                    Images.Add(Img);
+                    
+                }
+                return Ok(new ApiImages(Images, true));
+            }
         }
 
 
@@ -169,7 +379,7 @@ namespace Gallery.Controllers
         public IActionResult GetNsfwWaifuLewd()
         {
             if (DB.WaifuLewdCount == 0)
-                return BadRequest();
+                return BadRequest("This tag/category has no images. ( GL-5 )");
 
             GImage Img = DB.WaifuLewds.ElementAt(Program.RNGBetween(0, DB.WaifuLewdCount - 1));
             return Ok(new ApiImage(Img, true));
@@ -191,11 +401,15 @@ namespace Gallery.Controllers
         [HttpGet("/api/upload/url")]
         public async Task<IActionResult> UploadUrl(string url, string album = "19")
         {
+            if (IsPublicUse)
+                return Unauthorized("You are not allowed to use this with the public token");
+
             if (!DB.Keys.TryGetValue(Request.Headers["Authorization"][0], out ApiUser User))
                 return Unauthorized();
 
             if (!int.TryParse(album, out int albumid) || !DB.Albums.TryGetValue(albumid, out GAlbum GA))
                 return BadRequest("Invalid album id");
+
             if (User.ID != "190590364871032834")
             {
                 if (GA.owner == User.ID)

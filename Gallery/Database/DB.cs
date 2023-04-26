@@ -108,7 +108,11 @@ namespace Gallery.Database
         public static void ReloadAPIKeys()
         {
             Cursor<ApiUser> keys = R.Db("API").Table("Users").RunCursor<ApiUser>(Con);
-            Keys = keys.ToDictionary(x => x.Token, x => x);
+            Keys = keys.ToDictionary(x => x.GetRealToken(), x => x);
+            foreach (var i in Keys.Values.Where(x => !string.IsNullOrEmpty(x.PublicToken)).ToArray())
+            {
+                Keys.Add(i.GetRealPublicToken(), i);
+            }
         }
 
         public static Task Start()
